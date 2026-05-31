@@ -437,6 +437,7 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
           </div>
           <div class="in-grid">
             <div class="in-grp"><label class="in-label">SFD — S·F·Dose (mg) <span style="color:var(--dim);font-size:9px;">(= D for vancomycin)</span></label><input class="in-field" type="number" id="bp-dose" placeholder="e.g. 1000" oninput="calcBolusProxy()"></div>
+            <div class="in-grp"><label class="in-label">Infusion Time — t' (hr)</label><input class="in-field" type="number" id="bp-tp" placeholder="e.g. 1.5" step="0.5" oninput="calcBolusProxy()"></div>
             <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field" type="number" id="bp-tau" placeholder="e.g. 12" oninput="calcBolusProxy()"></div>
             <div class="in-grp"><label class="in-label">Measured SS Trough — C<sub>t</sub> (mg/L)</label><input class="in-field" type="number" id="bp-ct" placeholder="e.g. 15" oninput="calcBolusProxy()"></div>
           </div>
@@ -578,6 +579,24 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
           <div class="res-row" style="border-color:rgba(255,214,0,.1);flex-direction:column;align-items:flex-start;gap:8px;">
             <span class="res-lbl">⭐ Suggested round-hour hold time(s)</span>
             <div id="hold-sugg" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--cyan);line-height:1.8;">—</div>
+          </div>
+          <!-- Pass-by time sub-section — always visible -->
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,214,0,.12);">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--yellow);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">⏱ Pass-by Time — What Will C Be?</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5;">Enter any hold duration to see the predicted remaining concentration. Useful when you want to verify it stays in range after a short wait.</div>
+            <div class="in-grid" style="margin-bottom:12px;">
+              <div class="in-grp">
+                <label class="in-label">Pass-by time — t<sub>pass</sub> (hr)</label>
+                <input class="in-field yel" type="number" id="hold-tpass" placeholder="e.g. 1" step="0.5" oninput="calcPassBy()">
+              </div>
+            </div>
+            <div id="hold-passby-res" style="display:none;background:rgba(255,214,0,.04);border:1px solid rgba(255,214,0,.2);border-radius:10px;padding:14px 16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);">C after <span id="hold-tpass-echo" style="color:var(--yellow);">—</span> hr</span>
+                <span style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;" id="hold-passby-val">—</span>
+              </div>
+              <div style="font-family:'Space Mono',monospace;font-size:10px;margin-top:8px;" id="hold-passby-status"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -786,6 +805,63 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
         <div class="graph-wrap" id="auc-graph-wrap" style="margin-top:18px;">
           <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;">CONCENTRATION–TIME · AUC VISUALISATION</div>
           <canvas id="auc-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- ─── DESIGN NEW REGIMEN (Two Samples) ─── -->
+      <div class="card magenta" id="ts-design-card">
+        <div class="card-ttl mag"><div class="dot mag"></div>Design New Regimen — AUC/MIC Target</div>
+
+        <div class="in-grid">
+          <div class="in-grp"><label class="in-label">k<sub>e</sub> (hr⁻¹) <span style="font-size:9px;color:var(--dim);">EDITABLE</span></label><input class="in-field mag" type="number" id="tsd-ke" placeholder="from Step ①" step="0.0001" oninput="calcTsDesign()"></div>
+          <div class="in-grp"><label class="in-label">V<sub>d</sub> (L) <span style="font-size:9px;color:var(--dim);">EDITABLE</span></label><input class="in-field mag" type="number" id="tsd-vd" placeholder="from Step ②" oninput="calcTsDesign()"></div>
+          <div class="in-grp"><label class="in-label">Dose (mg)</label><input class="in-field mag" type="number" id="tsd-dose" placeholder="e.g. 1000" oninput="calcTsDesign()"></div>
+          <div class="in-grp"><label class="in-label">Infusion Time — t' (hr)</label><input class="in-field mag" type="number" id="tsd-tp" placeholder="e.g. 1.5" step="0.5" oninput="calcTsDesign()"></div>
+          <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field mag" type="number" id="tsd-tau" placeholder="e.g. 12" oninput="calcTsDesign()"></div>
+          <div class="in-grp"><label class="in-label">MIC (mg/L)</label><input class="in-field mag" type="number" id="tsd-mic" placeholder="e.g. 1" step="0.001" oninput="calcTsDesign()"></div>
+        </div>
+
+        <div id="tsd-results" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+            <div class="rr-box" style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.18);">
+              <div class="rr-lbl">AUC<sub>0–24h</sub></div>
+              <div class="rr-val" id="tsd-auc" style="color:var(--cyan);">—</div>
+              <div class="rr-unit">mg·hr/L</div>
+            </div>
+            <div class="rr-box" style="background:rgba(157,79,255,.05);border:1px solid rgba(157,79,255,.2);">
+              <div class="rr-lbl">AUC / MIC</div>
+              <div class="rr-val" id="tsd-aucmic" style="color:var(--purple);">—</div>
+              <div class="rr-unit">hr</div>
+              <div class="rr-status" id="tsd-aucmic-status"></div>
+            </div>
+            <div class="rr-box" style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.18);">
+              <div class="rr-lbl">C<sub>max</sub> SS</div>
+              <div class="rr-val" id="tsd-cmax" style="color:var(--cyan);">—</div>
+              <div class="rr-unit">mg/L</div>
+            </div>
+            <div class="rr-box" style="background:rgba(0,255,179,.05);border:1px solid rgba(0,255,179,.18);">
+              <div class="rr-lbl">C<sub>min</sub> SS</div>
+              <div class="rr-val" id="tsd-ctrough" style="color:var(--green);">—</div>
+              <div class="rr-unit">mg/L <span id="tsd-ctrough-tag" style="font-size:9px;"></span></div>
+            </div>
+          </div>
+
+          <!-- AUC/MIC target suggestion table -->
+          <div id="tsd-suggest-wrap" style="display:none;">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">⭐ Dose Suggestions to Hit AUC/MIC Target</div>
+            <div style="font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;margin-bottom:10px;">Target: AUC/MIC 400–600 (preferred) or ≥ 400. Click a row to apply.</div>
+            <div style="overflow-x:auto;">
+              <div style="display:grid;grid-template-columns:0.7fr 0.9fr 0.7fr 0.8fr 0.8fr 1fr;gap:4px;padding:6px 10px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">
+                <span>Interval</span><span>Dose</span><span>mg/kg</span><span>AUC</span><span>AUC/MIC</span><span>Status</span>
+              </div>
+              <div id="tsd-suggest-table"></div>
+            </div>
+          </div>
+
+          <div class="graph-wrap" id="tsd-graph-wrap">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;">DESIGN REGIMEN · CONCENTRATION–TIME PROFILE</div>
+            <canvas id="tsd-canvas"></canvas>
+          </div>
         </div>
       </div>
 
@@ -1077,16 +1153,17 @@ function calcSingle(){
     // Bolus Proxy path
     const Ct_bp=+document.getElementById('bp-ct').value;
     D=+document.getElementById('bp-dose').value;
+    tp=+document.getElementById('bp-tp').value;
     tau=+document.getElementById('bp-tau').value;
-    if(!Ct_bp||!D||!tau||Ct_bp<=0||D<=0||tau<=0){showErr('s-err','⚠ Fill Dose, τ, and measured trough for Bolus Proxy.');return;}
+    if(!Ct_bp||!D||!tp||!tau||Ct_bp<=0||D<=0||tp<=0||tau<=0){showErr('s-err',"⚠ Fill Dose, t', τ, and measured trough for Bolus Proxy.");return;}
+    if(tp>=tau){showErr('s-err',"⚠ Infusion time (t') must be less than dosing interval (τ).");return;}
     const arg=(Ct_bp+D/Vd)/Ct_bp;
     if(arg<=1){showErr('s-err','⚠ (Ct + D/Vd)/Ct must be > 1. Check inputs.');return;}
     ke=Math.log(arg)/tau;
     if(ke<=0||!isFinite(ke)){showErr('s-err','⚠ Invalid ke from Bolus Proxy. Check inputs.');return;}
     t12=Math.LN2/ke;
-    tp=0.1; // near-zero infusion approximating bolus (t'→0 breaks formulas; 0.1h used instead)
-    const R=D/(ke*Vd*tp);
-    CmaxSS=R*(1-Math.exp(-ke*tp))/(1-Math.exp(-ke*tau));
+    // Cmax/Cmin SS via multiple intermittent IV formula (institutional policy)
+    CmaxSS=(D*(1-Math.exp(-ke*tp)))/(tp*ke*Vd*(1-Math.exp(-ke*tau)));
     CminSS=CmaxSS*Math.exp(-ke*(tau-tp));
     G={ke,Vd,D,tp,tau,N:1,t:0,Ct:Ct_bp};
   } else {
@@ -1128,10 +1205,24 @@ function calcSingle(){
   document.getElementById('rr-calc').classList.add('active');
   document.getElementById('rr-cust').classList.remove('active');
   document.getElementById('cust-ke-wrap').style.display='none';
-  document.getElementById('r-tp').value=tp;
-  document.getElementById('r-tau').value=tau;
-  document.getElementById('r-t').value=t;
-  maybeShowHoldCard(Ct);
+  document.getElementById('r-tp').value=G.tp;
+  document.getElementById('r-tau').value=G.tau;
+  document.getElementById('r-t').value=G.t;
+  // Autofill SSTA AUC inputs (sc-dose, sc-vd, sc-ct)
+  document.getElementById('sc-dose').value = G.D;
+  document.getElementById('sc-vd').value   = Vd.toFixed(2);
+  document.getElementById('sc-ct').value   = G.Ct;
+  calcSstaAUC();
+  // Autofill Holding Time inputs (ke and Ctrough — always, not just supratherapeutic)
+  document.getElementById('hold-ke').value = ke.toFixed(5);
+  document.getElementById('hold-ct').value = G.Ct;
+  // Update auto-sum badges
+  document.getElementById('hold-ps-ke').textContent = ke.toFixed(5)+' hr⁻¹';
+  document.getElementById('hold-ps-ct').textContent = G.Ct+' mg/L';
+  document.getElementById('hold-calc-badge').textContent = '';
+  document.getElementById('hold-auto-sum').style.display = 'flex';
+  calcHoldTime();
+  maybeShowHoldCard(G.Ct);
   autoRegimen();
   setTimeout(()=>document.getElementById('s-res').scrollIntoView({behavior:'smooth',block:'center'}),100);
 }
@@ -1159,7 +1250,7 @@ function onKeMethod(m){
   document.getElementById('bp-err').classList.remove('show');
 }
 function calcBolusProxy(){
-  // Live calculation hint — full solve happens on "Solve for ke" button
+  // Live ke preview — full Cmax/Cmin solve happens on "Solve for ke" button
   hideErr('bp-err');
   const Ct  = +document.getElementById('bp-ct').value;
   const D   = +document.getElementById('bp-dose').value;
@@ -1258,6 +1349,35 @@ function calcHoldTime(){
   }
   document.getElementById('hold-sugg').innerHTML = suggHTML;
   document.getElementById('hold-res').classList.add('show');
+  // Always re-run passby calc in case tpass is already filled
+  calcPassBy();
+}
+
+function calcPassBy(){
+  const ke_v = +document.getElementById('hold-ke').value;
+  const Ct_v = +document.getElementById('hold-ct').value;
+  const tpass = +document.getElementById('hold-tpass').value;
+  const resEl = document.getElementById('hold-passby-res');
+  if(!ke_v||!Ct_v||ke_v<=0||Ct_v<=0||!tpass||tpass<=0){resEl.style.display='none';return;}
+  const Cremain = Ct_v * Math.exp(-ke_v * tpass);
+  document.getElementById('hold-tpass-echo').textContent = tpass;
+  document.getElementById('hold-passby-val').textContent = Cremain.toFixed(2)+' mg/L';
+  // Color + status
+  let color, statusTxt;
+  if(Cremain>=15&&Cremain<20){
+    color='var(--green)';statusTxt='✓ Within therapeutic range (15–20 mg/L)';
+  } else if(Cremain>=20){
+    color='var(--yellow)';statusTxt='Still supratherapeutic — hold longer';
+  } else if(Cremain>=10&&Cremain<15){
+    color='var(--cyan)';statusTxt='Sub-therapeutic (10–14.99) — resume soon';
+  } else {
+    color='var(--magenta)';statusTxt='Below 10 mg/L — redose promptly';
+  }
+  document.getElementById('hold-passby-val').style.color = color;
+  document.getElementById('hold-passby-val').style.filter = 'drop-shadow(0 0 5px '+color+')';
+  document.getElementById('hold-passby-status').textContent = statusTxt;
+  document.getElementById('hold-passby-status').style.color = color;
+  resEl.style.display='block';
 }
 // Called after calcSingle succeeds — pre-fills hold inputs if "calc" source selected
 function maybeShowHoldCard(Ct){
@@ -1501,38 +1621,29 @@ function calcVdTwo(){
   TS2={Vd,D,tp};
   document.getElementById('vd2-res-val').textContent=Vd.toFixed(2)+' L';
   document.getElementById('vd2-res-disp').classList.add('show');
+  // Prefill design card
+  const tsdKeEl=document.getElementById('tsd-ke');
+  const tsdVdEl=document.getElementById('tsd-vd');
+  if(TS.ke) tsdKeEl.value=TS.ke.toFixed(5);
+  tsdVdEl.value=Vd.toFixed(2);
+  calcTsDesign();
   // Update integral summary
   document.getElementById('intg-ps-vd').textContent=Vd.toFixed(2)+' L';
   document.getElementById('intg-ps-dose').textContent=D+' mg';
   document.getElementById('intg-ps-tp').textContent=tp+' hr';
-  // Auto-fill trad tp if empty
+  // Auto-fill trad-tp (t'*) = vd2 infusion time t' + peak draw delay t*
+  // t'* = time from START of infusion to peak draw = t' + t*
   const tradTpEl=document.getElementById('trad-tp');
-  if(!tradTpEl.value) tradTpEl.value=tp;
+  const tstarEl=document.getElementById('vd2-tstar');
+  const tstar_val=+tstarEl.value||0;
+  const tradTpVal=tp+tstar_val;
+  tradTpEl.value=tradTpVal>0?tradTpVal.toFixed(2):'';
   triggerAUC();
 }
 
 /* ═══ AUC METHOD TOGGLE ═══ */
 let aucMethod='trad';
 /* ════════════ SSTA AUC ════════════ */
-let sstaSrc = 'prev';
-function onSstaSrc(src){
-  sstaSrc = src;
-  const isCust = src==='cust';
-  document.getElementById('ssta-rr-prev').classList.toggle('active',!isCust);
-  document.getElementById('ssta-rr-cust').classList.toggle('active',isCust);
-  document.getElementById('ssta-prev-sum').style.display = isCust?'none':'flex';
-  document.getElementById('ssta-cust-in').style.display  = isCust?'grid':'none';
-  calcSstaAUC();
-}
-function refreshSstaPrevSum(){
-  // Pull values from TS (two-sample ke) and TS2 (vd) if available
-  const ct   = TS.Ct  || null;
-  const vd   = TS2.Vd || null;
-  const dose = TS2.D  || null;
-  document.getElementById('ssta-ps-ct').textContent   = ct   ? ct+' mg/L'   : '—';
-  document.getElementById('ssta-ps-vd').textContent   = vd   ? vd.toFixed(2)+' L' : '—';
-  document.getElementById('ssta-ps-dose').textContent = dose ? dose+' mg'   : '—';
-}
 function calcSstaAUC(){
   // Always-visible inputs in Single Sample tab
   const Ct = +document.getElementById('sc-ct').value;
@@ -2168,10 +2279,154 @@ function closeLightbox(){
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 
+/* ════════════ TWO-SAMPLES DESIGN REGIMEN ════════════ */
+function calcTsDesign(){
+  const ke  = +document.getElementById('tsd-ke').value;
+  const Vd  = +document.getElementById('tsd-vd').value;
+  const D   = +document.getElementById('tsd-dose').value;
+  const tp  = +document.getElementById('tsd-tp').value;
+  const tau = +document.getElementById('tsd-tau').value;
+  const mic = +document.getElementById('tsd-mic').value||0;
+  const res = document.getElementById('tsd-results');
+  if(!ke||!Vd||!D||!tp||!tau||ke<=0||Vd<=0||D<=0||tp<=0||tau<=tp){res.style.display='none';return;}
+  const CmaxSS=(D/(ke*Vd*tp))*(1-Math.exp(-ke*tp))/(1-Math.exp(-ke*tau));
+  const CminSS=CmaxSS*Math.exp(-ke*(tau-tp));
+  // AUC per interval at SS: by mass balance, ke·Vd·AUC_tau = D → AUC_tau = D/(ke·Vd)
+  // This is exact and independent of infusion shape or tau.
+  const AUC_tau = D / (ke * Vd);
+  const AUC24   = (24 / tau) * AUC_tau;
+  const aucmic=mic>0?AUC24/mic:null;
+  document.getElementById('tsd-auc').textContent=AUC24.toFixed(1);
+  document.getElementById('tsd-cmax').textContent=CmaxSS.toFixed(2)+' mg/L';
+  document.getElementById('tsd-ctrough').textContent=CminSS.toFixed(2)+' mg/L';
+  const ctrEl=document.getElementById('tsd-ctrough');
+  const ctrTagEl=document.getElementById('tsd-ctrough-tag');
+  if(CminSS>=15&&CminSS<=20){ctrEl.style.color='var(--green)';ctrTagEl.textContent='✓ 15–20';}
+  else if(CminSS>20){ctrEl.style.color='var(--yellow)';ctrTagEl.textContent='▲ HIGH';}
+  else{ctrEl.style.color='var(--magenta)';ctrTagEl.textContent='▼ LOW';}
+  if(aucmic!==null){
+    document.getElementById('tsd-aucmic').textContent=aucmic.toFixed(1);
+    const aucMicEl=document.getElementById('tsd-aucmic-status');
+    if(aucmic>=400&&aucmic<=600){aucMicEl.textContent='✓ Preferred (400–600)';aucMicEl.style.color='var(--green)';}
+    else if(aucmic>600){aucMicEl.textContent='↑ Above 600 — effective but review toxicity';aucMicEl.style.color='var(--yellow)';}
+    else{aucMicEl.textContent='▼ Sub-target — adjust dose/interval';aucMicEl.style.color='var(--magenta)';}
+    buildTsdSuggest(ke,Vd,tp,mic);
+    document.getElementById('tsd-suggest-wrap').style.display='block';
+  } else {
+    document.getElementById('tsd-aucmic').textContent='—';
+    document.getElementById('tsd-aucmic-status').textContent='Enter MIC for target assessment';
+    document.getElementById('tsd-aucmic-status').style.color='var(--muted)';
+    document.getElementById('tsd-suggest-wrap').style.display='none';
+  }
+  res.style.display='block';
+  _drawTsdGraph(ke,D,Vd,tp,tau);
+}
+
+function _drawTsdGraph(ke,D,Vd,tp,tau){
+  const wrapId='tsd-graph-wrap',canvasId='tsd-canvas';
+  const wrap=document.getElementById(wrapId);
+  const canvas=document.getElementById(canvasId);
+  wrap.style.display='block';
+  const dpr=window.devicePixelRatio||1;
+  const W=wrap.clientWidth-28;
+  const H=Math.round(W*0.46);
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const N=6,total=N*tau;
+  const pad={t:16,r:18,b:46,l:54};
+  const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  const pts=600;const times=[],concs=[];
+  for(let i=0;i<=pts;i++){const t=i/pts*total;times.push(t);concs.push(concAt(t,ke,D,Vd,tp,tau,N));}
+  const maxC=Math.max(...concs,20)*1.18;
+  const tx=t=>pad.l+(t/total)*gW;
+  const ty=c=>pad.t+gH-(c/maxC)*gH;
+  for(let i=0;i<=5;i++){
+    const y=pad.t+(i/5)*gH;
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='right';
+    ctx.fillText((maxC*(1-i/5)).toFixed(1),pad.l-7,y+4);
+  }
+  const nTX=Math.min(N+1,7);
+  for(let i=0;i<=nTX;i++){
+    const x=tx(i/nTX*total);
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='center';
+    ctx.fillText((i/nTX*total).toFixed(0),x,pad.t+gH+18);
+  }
+  ctx.fillStyle=gAxisLabelColor();ctx.font='11px DM Sans';ctx.textAlign='center';
+  ctx.fillText('Time (hr)',pad.l+gW/2,H-4);
+  ctx.save();ctx.translate(13,pad.t+gH/2);ctx.rotate(-Math.PI/2);ctx.fillText('Conc. (mg/L)',0,0);ctx.restore();
+  // Target band 15-20
+  if(20<maxC){
+    ctx.fillStyle='rgba(0,255,179,.05)';ctx.fillRect(pad.l,ty(20),gW,ty(15)-ty(20));
+    ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(0,255,179,.3)';ctx.lineWidth=1;
+    [15,20].forEach(v=>{ctx.beginPath();ctx.moveTo(pad.l,ty(v));ctx.lineTo(pad.l+gW,ty(v));ctx.stroke();});
+    ctx.setLineDash([]);
+  }
+  ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(255,214,0,.22)';ctx.lineWidth=1;
+  for(let j=0;j<N;j++){const x=tx(j*tau);ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();}
+  ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(tx(times[0]),ty(0));
+  for(let i=0;i<times.length;i++) ctx.lineTo(tx(times[i]),ty(concs[i]));
+  ctx.lineTo(tx(times[times.length-1]),ty(0));ctx.closePath();
+  const fg=ctx.createLinearGradient(0,pad.t,0,pad.t+gH);
+  fg.addColorStop(0,'rgba(255,0,136,.12)');fg.addColorStop(1,'rgba(255,0,136,0)');
+  ctx.fillStyle=fg;ctx.fill();
+  const lg=ctx.createLinearGradient(pad.l,0,pad.l+gW,0);
+  lg.addColorStop(0,'#ff0088');lg.addColorStop(0.5,'#9d4fff');lg.addColorStop(1,'#00e5ff');
+  ctx.beginPath();ctx.moveTo(tx(times[0]),ty(concs[0]));
+  for(let i=1;i<times.length;i++) ctx.lineTo(tx(times[i]),ty(concs[i]));
+  ctx.strokeStyle=lg;ctx.lineWidth=2.5;ctx.stroke();
+  ctx.strokeStyle=isDark()?'rgba(104,104,160,.45)':'rgba(80,110,150,.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
+}
+
+function buildTsdSuggest(ke,Vd,tp,mic){
+  const tableEl=document.getElementById('tsd-suggest-table');
+  tableEl.innerHTML='';
+  const intervals=[6,8,12,24,48];
+  const t12=Math.LN2/ke;
+  intervals.forEach(tau=>{
+    if(tau<0.6*t12||tau>4*t12) return;
+    // Target doses for AUC/MIC 400, 500, 600
+    [400,500,600].forEach(aucTarget=>{
+      const D_raw=(aucTarget*mic*ke*Vd*tau)/24;
+      const D=Math.round(D_raw/250)*250;
+      if(D<=0||D>6000) return;
+      const CmaxSS=(D/(ke*Vd*tp))*(1-Math.exp(-ke*tp))/(1-Math.exp(-ke*tau));
+      const CminSS=CmaxSS*Math.exp(-ke*(tau-tp));
+      const AUC_tau=D/(ke*Vd); // exact SS mass balance
+      const AUC24=(24/tau)*AUC_tau;
+      const aucmic=AUC24/mic;
+      const isPreferred=aucmic>=400&&aucmic<=600;
+      const isAbove=aucmic>600;
+      const sc=isPreferred?'var(--green)':isAbove?'var(--yellow)':'var(--magenta)';
+      const st=isPreferred?'✓ Preferred':isAbove?'↑ >600':'▼ <400';
+      const row=document.createElement('div');
+      row.style.cssText='display:grid;grid-template-columns:0.7fr 0.9fr 0.7fr 0.8fr 0.8fr 1fr;gap:4px;padding:9px 10px;border-radius:7px;font-family:Space Mono,monospace;font-size:11px;align-items:center;background:var(--in-bg);border:1px solid var(--in-br);cursor:pointer;transition:border-color .2s;margin-bottom:4px;';
+      row.innerHTML=`<span>q${tau}h</span><span>${D} mg</span><span>${(D/(Vd/0.7)).toFixed(1)}</span><span>${AUC24.toFixed(0)}</span><span style="color:${sc}">${aucmic.toFixed(0)}</span><span style="color:${sc}">${st}</span>`;
+      row.addEventListener('mouseenter',()=>row.style.borderColor='var(--magenta)');
+      row.addEventListener('mouseleave',()=>row.style.borderColor='var(--in-br)');
+      row.addEventListener('click',()=>{
+        document.getElementById('tsd-dose').value=D;
+        document.getElementById('tsd-tp').value=tp;
+        document.getElementById('tsd-tau').value=tau;
+        calcTsDesign();
+        setTimeout(()=>document.getElementById('tsd-results').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+      });
+      tableEl.appendChild(row);
+    });
+  });
+}
+
 // Register all graph wraps after page load
 window.addEventListener('load', function(){
   initGraphTap('graph-wrap',       'SINGLE SAMPLE — CONCENTRATION–TIME PROFILE');
   initGraphTap('auc-graph-wrap',   'TWO SAMPLES — AUC VISUALISATION');
+  initGraphTap('tsd-graph-wrap',   'TWO SAMPLES — DESIGN REGIMEN');
   initGraphTap('id-graph-wrap',    'INITIAL DOSE — APPROACH TO STEADY STATE');
 });
 </script>
