@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -190,7 +191,7 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 
 /* Graph */
 .graph-wrap{margin-top:18px;background:var(--graph-bg);border-radius:12px;padding:14px;border:1px solid var(--border);display:none;cursor:zoom-in;position:relative;}
-.graph-wrap::after{content:'\u2922  Tap to enlarge';position:absolute;bottom:22px;right:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);opacity:.55;pointer-events:none;letter-spacing:.5px;}
+.graph-wrap::after{content:'\2922  Tap to enlarge';position:absolute;bottom:22px;right:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);opacity:.55;pointer-events:none;letter-spacing:.5px;}
 #pk-canvas{width:100%;height:auto;border-radius:6px;}
 
 /* Radio options */
@@ -356,6 +357,7 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
       <button class="btn-sm-back" onclick="nav('home')">← Back</button>
       <div class="page-ttl">Vancomycin PK</div>
     </div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:22px;margin-left:2px;">GLYCOPEPTIDE · CONCENTRATION-DEPENDENT KILLER WITH TIME-DEPENDENT CHARACTERISTICS</div>
 
     <!-- Tabs -->
     <div class="tabs">
@@ -368,31 +370,78 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
     <div id="tc-single" class="tab-content active">
       <div class="card">
         <div class="card-ttl"><div class="dot"></div>Multiple Intermittent IV — Solve for k<sub>e</sub></div>
-        <div class="eq-box">
-          <span>C<sub>t</sub> =</span>
-          <span class="eq-frac"><span class="eq-num">D</span><span class="eq-den">k<sub>e</sub> · V<sub>d</sub> · t'</span></span>
-          <span class="eq-mid">
-            <span>· (1 − e<sup>−k<sub>e</sub>t'</sup>) ·</span>
-            <span class="eq-frac"><span class="eq-num">1 − e<sup>−Nk<sub>e</sub>τ</sup></span><span class="eq-den">1 − e<sup>−k<sub>e</sub>τ</sup></span></span>
-            <span>· e<sup>−k<sub>e</sub>t</sup></span>
-          </span>
-        </div>
-        <div class="in-label" style="margin-bottom:10px;">Volume of Distribution (V<sub>d</sub>) Model</div>
+
+        <!-- STEP 1: Vd model always on top -->
+        <div class="in-label" style="margin-bottom:10px;">① Volume of Distribution (V<sub>d</sub>) Model — Enter Age &amp; Weight First</div>
         <div class="vd-sel">
           <div class="vd-opt selected" onclick="pickVd(this,'pt')"><div class="vd-tag">Pharmacotherapy</div><div class="vd-formula">0.7 × weight</div><div class="vd-val" id="vd-pt">— L</div></div>
           <div class="vd-opt" onclick="pickVd(this,'amb')"><div class="vd-tag">Ambrose</div><div class="vd-formula">0.17·age + 0.22·wt + 15</div><div class="vd-val" id="vd-amb">— L</div></div>
           <div class="vd-opt" onclick="pickVd(this,'ped')"><div class="vd-tag">Pediatric</div><div class="vd-formula">0.522 × weight</div><div class="vd-val" id="vd-ped">— L</div></div>
         </div>
-        <div class="in-grid">
+        <div class="in-grid" style="margin-bottom:22px;">
           <div class="in-grp"><label class="in-label">Age (years)</label><input class="in-field" type="number" id="s-age" placeholder="e.g. 45" oninput="refreshVd()"></div>
           <div class="in-grp"><label class="in-label">Weight (kg)</label><input class="in-field" type="number" id="s-wt" placeholder="e.g. 70" oninput="refreshVd()"></div>
-          <div class="in-grp"><label class="in-label">Dose — D (mg)</label><input class="in-field" type="number" id="s-dose" placeholder="e.g. 1000"></div>
-          <div class="in-grp"><label class="in-label">Infusion Time — t' (hr)</label><input class="in-field" type="number" id="s-tp" placeholder="e.g. 1.5"></div>
-          <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field" type="number" id="s-tau" placeholder="e.g. 12"></div>
-          <div class="in-grp"><label class="in-label">Number of Doses — N</label><input class="in-field" type="number" id="s-n" placeholder="e.g. 3" min="1"></div>
-          <div class="in-grp"><label class="in-label">Time after infusion — t (hr)</label><input class="in-field" type="number" id="s-t" placeholder="e.g. 1"></div>
-          <div class="in-grp"><label class="in-label">Measured Conc. — C<sub>t</sub> (mg/L)</label><input class="in-field" type="number" id="s-ct" placeholder="e.g. 15"></div>
         </div>
+
+        <!-- STEP 2: ke Method Selector — clickable cards -->
+        <div class="in-label" style="margin-bottom:12px;">② Choose k<sub>e</sub> Solving Method</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+          <div id="km-exact-card" onclick="onKeMethod('exact')"
+            style="border:2px solid var(--cyan);border-radius:13px;padding:14px 12px;cursor:pointer;background:rgba(0,229,255,.06);transition:all .28s;position:relative;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--cyan);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase;">📐 Exact Analytic</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Multiple Intermittent IV</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);line-height:1.5;">Full bisection solve<br>Needs: D, t', τ, N, t, Ct</div>
+            <div id="km-exact-check" style="position:absolute;top:10px;right:12px;color:var(--cyan);font-size:16px;">✓</div>
+          </div>
+          <div id="km-proxy-card" onclick="onKeMethod('proxy')"
+            style="border:2px solid var(--in-br);border-radius:13px;padding:14px 12px;cursor:pointer;background:var(--in-bg);transition:all .28s;position:relative;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--yellow);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase;">⚡ Bolus Proxy</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Single-Level Bolus Proxy</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);line-height:1.5;">Direct closed-form solve<br>Needs: D, τ, Vd, Ct (trough SS)</div>
+            <div id="km-proxy-check" style="position:absolute;top:10px;right:12px;color:var(--yellow);font-size:16px;display:none;">✓</div>
+          </div>
+        </div>
+
+        <!-- EXACT inputs -->
+        <div id="ke-exact-wrap">
+          <div class="eq-box">
+            <span>C<sub>t</sub> =</span>
+            <span class="eq-frac"><span class="eq-num">D</span><span class="eq-den">k<sub>e</sub> · V<sub>d</sub> · t'</span></span>
+            <span class="eq-mid">
+              <span>· (1 − e<sup>−k<sub>e</sub>t'</sup>) ·</span>
+              <span class="eq-frac"><span class="eq-num">1 − e<sup>−Nk<sub>e</sub>τ</sup></span><span class="eq-den">1 − e<sup>−k<sub>e</sub>τ</sup></span></span>
+              <span>· e<sup>−k<sub>e</sub>t</sup></span>
+            </span>
+          </div>
+          <div class="in-grid">
+            <div class="in-grp"><label class="in-label">Dose — D (mg)</label><input class="in-field" type="number" id="s-dose" placeholder="e.g. 1000"></div>
+            <div class="in-grp"><label class="in-label">Infusion Time — t' (hr)</label><input class="in-field" type="number" id="s-tp" placeholder="e.g. 1.5"></div>
+            <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field" type="number" id="s-tau" placeholder="e.g. 12"></div>
+            <div class="in-grp"><label class="in-label">Number of Doses — N</label><input class="in-field" type="number" id="s-n" placeholder="e.g. 3" min="1"></div>
+            <div class="in-grp"><label class="in-label">Time after infusion — t (hr)</label><input class="in-field" type="number" id="s-t" placeholder="e.g. 9.5"></div>
+            <div class="in-grp"><label class="in-label">Measured Conc. — C<sub>t</sub> (mg/L)</label><input class="in-field" type="number" id="s-ct" placeholder="e.g. 15"></div>
+          </div>
+        </div>
+
+        <!-- BOLUS PROXY inputs -->
+        <div id="ke-proxy-wrap" style="display:none;">
+          <div class="eq-box" style="flex-direction:column;gap:6px;">
+            <div>k<sub>e</sub> =
+              <span class="eq-frac" style="display:inline-flex;vertical-align:middle;">
+                <span class="eq-num">ln( C<sub>t</sub> + D/V<sub>d</sub> ) − ln( C<sub>t</sub> )</span>
+                <span class="eq-den">τ</span>
+              </span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,214,0,.6);">C<sub>t</sub> = measured SS trough &nbsp;|&nbsp; SFD = salt factor × bioavailability × dose &nbsp;(vancomycin: SFD = 1 × 1 × D = D)</div>
+          </div>
+          <div class="in-grid">
+            <div class="in-grp"><label class="in-label">SFD — S·F·Dose (mg) <span style="color:var(--dim);font-size:9px;">(= D for vancomycin)</span></label><input class="in-field" type="number" id="bp-dose" placeholder="e.g. 1000" oninput="calcBolusProxy()"></div>
+            <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field" type="number" id="bp-tau" placeholder="e.g. 12" oninput="calcBolusProxy()"></div>
+            <div class="in-grp"><label class="in-label">Measured SS Trough — C<sub>t</sub> (mg/L)</label><input class="in-field" type="number" id="bp-ct" placeholder="e.g. 15" oninput="calcBolusProxy()"></div>
+          </div>
+          <div class="err-msg" id="bp-err"></div>
+        </div>
+
         <div class="err-msg" id="s-err"></div>
         <button class="calc-btn" onclick="calcSingle()">⟳ Solve for k<sub>e</sub></button>
         <div class="res-box" id="s-res">
@@ -405,6 +454,9 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
         <div class="graph-wrap" id="graph-wrap">
           <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;">CONCENTRATION–TIME PROFILE</div>
           <canvas id="pk-canvas"></canvas>
+        </div>
+        <div id="proxy-graph-note" style="display:none;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,214,0,.15);background:rgba(255,214,0,.03);">
+          ⚠ Graph assumes a 0.1-hour infusion as a near-zero bolus approximation for visualization purposes. The Bolus Proxy equation assumes instantaneous dosing (t'→0); t'=0 is a bolus infusion formula.
         </div>
       </div>
 
@@ -430,12 +482,110 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
         <div class="in-grid">
           <div class="in-grp"><label class="in-label">New Dose (mg)</label><input class="in-field mag" type="number" id="r-dose" placeholder="e.g. 1500" oninput="autoRegimen()"></div>
           <div class="in-grp"><label class="in-label">Infusion Time — t' (hr)</label><input class="in-field mag" type="number" id="r-tp" placeholder="e.g. 1.5" oninput="autoRegimen()"></div>
-          <div class="in-grp"><label class="in-label">Time after infusion — t (hr)</label><input class="in-field mag" type="number" id="r-t" placeholder="e.g. 1" oninput="autoRegimen()"></div>
+          <div class="in-grp"><label class="in-label">Time after infusion — t (hr)</label><input class="in-field mag" type="number" id="r-t" placeholder="e.g. 9.5" oninput="autoRegimen()"></div>
           <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field mag" type="number" id="r-tau" placeholder="e.g. 12" oninput="autoRegimen()"></div>
         </div>
         <div class="rr-grid">
           <div class="rr-box"><div class="rr-lbl">C<sub>max</sub> — Steady State</div><div class="rr-val" id="rr-cmax">—</div><div class="rr-unit">mg/L</div></div>
           <div class="rr-box"><div class="rr-lbl">C<sub>min</sub> — Steady State</div><div class="rr-val" id="rr-cmin">—</div><div class="rr-unit">mg/L</div></div>
+        </div>
+      </div>
+      <!-- ─── SSTA AUC ─── -->
+      <div class="card green">
+        <div class="card-ttl grn"><div class="dot grn"></div>SSTA — Simplified Single-Trough AUC</div>
+
+        <div class="eq-box" style="border-color:rgba(0,255,179,.18);color:var(--green);font-size:clamp(9px,2.1vw,12px);flex-direction:column;gap:8px;">
+          <div>AUC<sub>0–24</sub> =
+            <span class="eq-frac" style="display:inline-flex;vertical-align:middle;">
+              <span class="eq-num" style="border-color:var(--green);">Dose × 24</span>
+              <span class="eq-den">V<sub>d</sub> × ln( 1 + Dose / (V<sub>d</sub> · C<sub>trough</sub>) )</span>
+            </span>
+          </div>
+          <div style="font-size:9px;color:rgba(0,255,179,.5);">Single-trough approximation at steady state · No peak sample required · No graph needed</div>
+        </div>
+
+        <div class="info-note" style="border-color:rgba(0,255,179,.15);">
+          Fill Dose, V<sub>d</sub>, and C<sub>trough</sub> below. If you solved k<sub>e</sub> above, V<sub>d</sub> is already calculated — just re-enter the values manually or use the pre-filled hint.
+        </div>
+
+        <div class="in-grid">
+          <div class="in-grp"><label class="in-label">Dose (mg)</label><input class="in-field" type="number" id="sc-dose" placeholder="e.g. 1000" oninput="calcSstaAUC()"></div>
+          <div class="in-grp"><label class="in-label">V<sub>d</sub> (L)</label><input class="in-field" type="number" id="sc-vd" placeholder="e.g. 49" oninput="calcSstaAUC()"></div>
+          <div class="in-grp"><label class="in-label">C<sub>trough</sub> (mg/L)</label><input class="in-field" type="number" id="sc-ct" placeholder="e.g. 12" oninput="calcSstaAUC()"></div>
+          <div class="in-grp"><label class="in-label">MIC (mg/L) <span style="color:var(--dim);font-size:9px;">OPT</span></label><input class="in-field" type="number" id="ssta-mic" placeholder="e.g. 1" step="0.001" oninput="calcSstaAUC()"></div>
+        </div>
+
+        <div class="auc-res" id="ssta-auc-box" style="display:none;">
+          <div class="auc-lbl">AUC<sub>0–24h</sub> (SSTA)</div>
+          <div class="auc-val" id="ssta-auc-val" style="color:var(--green);">—</div>
+          <div class="auc-unit">mg · hr / L</div>
+        </div>
+        <div class="auc-res" id="ssta-mic-box" style="display:none;border-color:rgba(157,79,255,.3);background:rgba(157,79,255,.05);">
+          <div class="auc-lbl" style="color:var(--purple);">AUC<sub>0–24h</sub> / MIC</div>
+          <div class="auc-val" id="ssta-mic-val" style="color:var(--purple);filter:drop-shadow(0 0 7px rgba(157,79,255,.4));">—</div>
+          <div class="auc-unit">hr &nbsp;(target ≥ 400–600 for vancomycin)</div>
+        </div>
+      </div>
+
+      <!-- ─── HOLDING TIME ESTIMATOR ─── -->
+      <div class="card yellow">
+        <div class="card-ttl yel"><div class="dot yel"></div>Supratherapeutic Trough — Holding Time Estimator</div>
+
+        <div class="eq-box" style="border-color:rgba(255,214,0,.22);color:var(--yellow);font-size:clamp(9px,2.2vw,12px);">
+          C(t) = C<sub>trough</sub> · e<sup>−k<sub>e</sub>·t</sup>
+          &nbsp;→&nbsp;
+          t =
+          <span class="eq-frac" style="display:inline-flex;vertical-align:middle;">
+            <span class="eq-num" style="border-color:var(--yellow);">ln( C<sub>trough</sub> ) − ln( C<sub>target</sub> )</span>
+            <span class="eq-den">k<sub>e</sub></span>
+          </span>
+        </div>
+
+        <!-- Source toggle (same pattern as Regimen Designer) -->
+        <div class="radio-row" style="margin-bottom:14px;">
+          <label class="radio-opt active" id="hold-rr-calc" onclick="onHoldSrc('calc')">
+            <input type="radio" name="hold-src" value="calc" checked style="accent-color:var(--yellow)">
+            <span class="radio-lbl">Use calculated k<sub>e</sub> &amp; C<sub>trough</sub> <span id="hold-calc-badge" style="font-size:10px;color:var(--muted);">(solve above first)</span></span>
+          </label>
+          <label class="radio-opt" id="hold-rr-cust" onclick="onHoldSrc('cust')">
+            <input type="radio" name="hold-src" value="cust" style="accent-color:var(--yellow)">
+            <span class="radio-lbl">Enter manually</span>
+          </label>
+        </div>
+
+        <!-- Auto summary (shown when using calculated) -->
+        <div class="prev-sum" id="hold-auto-sum" style="border-color:rgba(255,214,0,.15);background:rgba(255,214,0,.03);display:none;">
+          <span class="prev-item">k<sub>e</sub>: <span id="hold-ps-ke" style="color:var(--yellow);">—</span></span>
+          <span class="prev-item">C<sub>trough</sub>: <span id="hold-ps-ct" style="color:var(--yellow);">—</span></span>
+        </div>
+
+        <!-- Manual inputs (always shown — pre-filled when calc is available) -->
+        <div class="in-grid" id="hold-inputs">
+          <div class="in-grp"><label class="in-label">k<sub>e</sub> (hr⁻¹)</label><input class="in-field yel" type="number" id="hold-ke" placeholder="e.g. 0.085" step="0.001" oninput="calcHoldTime()"></div>
+          <div class="in-grp"><label class="in-label">C<sub>trough</sub> (mg/L) — current measured</label><input class="in-field yel" type="number" id="hold-ct" placeholder="e.g. 25" oninput="calcHoldTime()"></div>
+        </div>
+
+        <div class="info-note" style="border-color:rgba(255,214,0,.2);background:rgba(255,214,0,.03);color:var(--yellow);margin-bottom:14px;">
+          Target: <strong>15.00–19.99 mg/L</strong>. Suggested time targets C &lt; 17.5 mg/L (preferred mid-lower range).
+        </div>
+
+        <div class="res-box" id="hold-res" style="border-color:rgba(255,214,0,.25);background:rgba(255,214,0,.03);">
+          <div class="res-row" style="border-color:rgba(255,214,0,.1);">
+            <span class="res-lbl">Hold until C = 19.99 mg/L</span>
+            <span class="res-val" id="hold-t-hi" style="color:var(--yellow);">—</span>
+          </div>
+          <div class="res-row" style="border-color:rgba(255,214,0,.1);">
+            <span class="res-lbl">Hold until C = 17.50 mg/L <span style="font-size:9px;color:var(--green);">PREFERRED</span></span>
+            <span class="res-val" id="hold-t-pref" style="color:var(--green);">—</span>
+          </div>
+          <div class="res-row" style="border-color:rgba(255,214,0,.1);">
+            <span class="res-lbl">Hold until C = 15.00 mg/L</span>
+            <span class="res-val" id="hold-t-lo" style="color:var(--yellow);">—</span>
+          </div>
+          <div class="res-row" style="border-color:rgba(255,214,0,.1);flex-direction:column;align-items:flex-start;gap:8px;">
+            <span class="res-lbl">⭐ Suggested round-hour hold time(s)</span>
+            <div id="hold-sugg" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--cyan);line-height:1.8;">—</div>
+          </div>
         </div>
       </div>
     </div><!-- end tc-single -->
@@ -522,10 +672,10 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
       </div>
 
       <!-- ③ AUC -->
-      <div class="card green" id="auc-card" style="display:none;">
+      <div class="card green" id="auc-card">
         <div class="card-ttl grn"><div class="dot grn"></div>③ AUC Calculation (0–24 h)</div>
 
-        <!-- Method toggle -->
+        <!-- Method toggle — Traditional & Integral only -->
         <div class="method-toggle">
           <div class="mth-btn active" id="mth-trad" onclick="onAucMethod('trad')">Traditional AUC</div>
           <div class="mth-btn" id="mth-intg" onclick="onAucMethod('intg')">Integral AUC</div>
@@ -925,29 +1075,57 @@ function calcSingle(){
   hideErr('s-err');
   const age=+document.getElementById('s-age').value;
   const wt=+document.getElementById('s-wt').value;
-  const D=+document.getElementById('s-dose').value;
-  const tp=+document.getElementById('s-tp').value;
-  const tau=+document.getElementById('s-tau').value;
-  const N=+document.getElementById('s-n').value;
-  const t=+document.getElementById('s-t').value;
-  const Ct=+document.getElementById('s-ct').value;
-  if([age,wt,D,tp,tau,N,t,Ct].some(isNaN)||[D,tp,tau,N,t,Ct].some(v=>v<=0)||wt<=0){showErr('s-err','⚠ Please fill all fields with valid positive values.');return;}
-  if(tp>=tau){showErr('s-err',"⚠ Infusion time (t') must be less than dosing interval (τ).");return;}
   const Vd=getVd();
-  if(Vd<=0){showErr('s-err','⚠ Please enter valid Age and Weight to compute Vd.');return;}
-  const ke=solveKe(D,Vd,tp,tau,N,t,Ct);
-  if(ke===null||ke<=0){showErr('s-err','⚠ Could not solve for kₑ. Check your inputs.');return;}
-  const t12=Math.LN2/ke;
-  const CmaxSS=(D/(ke*Vd*tp))*(1-Math.exp(-ke*tp))/(1-Math.exp(-ke*tau));
-  const CminSS=CmaxSS*Math.exp(-ke*t);
-  G={ke,Vd,D,tp,tau,N,t,Ct};
+  if(Vd<=0||wt<=0){showErr('s-err','⚠ Please enter Age and Weight to compute Vd.');return;}
+
+  let ke, t12, CmaxSS, CminSS, D, tp, tau;
+
+  if(keMethod==='proxy'){
+    // Bolus Proxy path
+    const Ct_bp=+document.getElementById('bp-ct').value;
+    D=+document.getElementById('bp-dose').value;
+    tau=+document.getElementById('bp-tau').value;
+    if(!Ct_bp||!D||!tau||Ct_bp<=0||D<=0||tau<=0){showErr('s-err','⚠ Fill Dose, τ, and measured trough for Bolus Proxy.');return;}
+    const arg=(Ct_bp+D/Vd)/Ct_bp;
+    if(arg<=1){showErr('s-err','⚠ (Ct + D/Vd)/Ct must be > 1. Check inputs.');return;}
+    ke=Math.log(arg)/tau;
+    if(ke<=0||!isFinite(ke)){showErr('s-err','⚠ Invalid ke from Bolus Proxy. Check inputs.');return;}
+    t12=Math.LN2/ke;
+    tp=0.1; // near-zero infusion approximating bolus (t'→0 breaks formulas; 0.1h used instead)
+    const R=D/(ke*Vd*tp);
+    CmaxSS=R*(1-Math.exp(-ke*tp))/(1-Math.exp(-ke*tau));
+    CminSS=CmaxSS*Math.exp(-ke*(tau-tp));
+    G={ke,Vd,D,tp,tau,N:1,t:0,Ct:Ct_bp};
+  } else {
+    // Exact Analytic path
+    D=+document.getElementById('s-dose').value;
+    tp=+document.getElementById('s-tp').value;
+    tau=+document.getElementById('s-tau').value;
+    const N=+document.getElementById('s-n').value;
+    const t=+document.getElementById('s-t').value;
+    const Ct=+document.getElementById('s-ct').value;
+    if([D,tp,tau,N,t,Ct].some(v=>!v||v<=0)){showErr('s-err','⚠ Please fill all fields with valid positive values.');return;}
+    if(tp>=tau){showErr('s-err',"⚠ Infusion time (t') must be less than dosing interval (τ).");return;}
+    ke=solveKe(D,Vd,tp,tau,N,t,Ct);
+    if(ke===null||ke<=0){showErr('s-err','⚠ Could not solve for kₑ. Check your inputs.');return;}
+    t12=Math.LN2/ke;
+    CmaxSS=(D/(ke*Vd*tp))*(1-Math.exp(-ke*tp))/(1-Math.exp(-ke*tau));
+    CminSS=CmaxSS*Math.exp(-ke*t);
+    G={ke,Vd,D,tp,tau,N,t,Ct};
+  }
   document.getElementById('r-ke').textContent=ke.toFixed(5)+' hr⁻¹';
   document.getElementById('r-t12').textContent=t12.toFixed(2)+' hr';
   document.getElementById('r-vd').textContent=Vd.toFixed(2)+' L';
   document.getElementById('r-cmax-ss').textContent=CmaxSS.toFixed(2)+' mg/L';
   document.getElementById('r-cmin-ss').textContent=CminSS.toFixed(2)+' mg/L';
   document.getElementById('s-res').classList.add('show');
-  drawGraph(ke,D,Vd,tp,tau,N,t,Ct);
+  if(keMethod==='proxy'){
+    drawProxyGraph(ke,G.D,Vd,G.tau,G.Ct);
+  } else {
+    drawGraph(ke,G.D,Vd,G.tp,G.tau,G.N,G.t,G.Ct);
+  }
+  const pgNote=document.getElementById('proxy-graph-note');
+  if(pgNote) pgNote.style.display=keMethod==='proxy'?'block':'none';
   document.getElementById('graph-wrap').style.display='block';
   const rrCalc=document.getElementById('rr-calc');
   rrCalc.style.opacity='1';rrCalc.style.pointerEvents='auto';
@@ -960,11 +1138,246 @@ function calcSingle(){
   document.getElementById('r-tp').value=tp;
   document.getElementById('r-tau').value=tau;
   document.getElementById('r-t').value=t;
+  maybeShowHoldCard(Ct);
   autoRegimen();
   setTimeout(()=>document.getElementById('s-res').scrollIntoView({behavior:'smooth',block:'center'}),100);
 }
 
+/* ════════════ BOLUS PROXY ke ════════════ */
+let keMethod = 'exact';
+function onKeMethod(m){
+  keMethod = m;
+  // Visual: exact card
+  const eCard = document.getElementById('km-exact-card');
+  const pCard = document.getElementById('km-proxy-card');
+  if(m==='exact'){
+    eCard.style.borderColor='var(--cyan)';eCard.style.background='rgba(0,229,255,.06)';
+    pCard.style.borderColor='var(--in-br)';pCard.style.background='var(--in-bg)';
+  } else {
+    pCard.style.borderColor='var(--yellow)';pCard.style.background='rgba(255,214,0,.06)';
+    eCard.style.borderColor='var(--in-br)';eCard.style.background='var(--in-bg)';
+  }
+  document.getElementById('km-exact-check').style.display = m==='exact'?'block':'none';
+  document.getElementById('km-proxy-check').style.display = m==='proxy'?'block':'none';
+  document.getElementById('ke-exact-wrap').style.display  = m==='exact'?'block':'none';
+  document.getElementById('ke-proxy-wrap').style.display  = m==='proxy'?'block':'none';
+  // Clear errors
+  document.getElementById('s-err').classList.remove('show');
+  document.getElementById('bp-err').classList.remove('show');
+}
+function calcBolusProxy(){
+  // Live calculation hint — full solve happens on "Solve for ke" button
+  hideErr('bp-err');
+  const Ct  = +document.getElementById('bp-ct').value;
+  const D   = +document.getElementById('bp-dose').value;
+  const tau = +document.getElementById('bp-tau').value;
+  const Vd  = getVd();
+  if(!Ct||!D||!tau||Ct<=0||D<=0||tau<=0||Vd<=0) return;
+  const arg=(Ct+D/Vd)/Ct;
+  if(arg<=1) return;
+  const ke=Math.log(arg)/tau;
+  if(ke<=0||!isFinite(ke)) return;
+  // Show live preview in err field as muted hint
+  const t12=Math.LN2/ke;
+  document.getElementById('bp-err').style.display='block';
+  document.getElementById('bp-err').style.background='rgba(0,229,255,.04)';
+  document.getElementById('bp-err').style.borderColor='rgba(0,229,255,.15)';
+  document.getElementById('bp-err').style.color='var(--muted)';
+  document.getElementById('bp-err').textContent='Preview: kₑ ≈ '+ke.toFixed(5)+' hr⁻¹ · t½ ≈ '+t12.toFixed(1)+' hr  (click Solve to confirm)';
+}
+
+/* ════════════ HOLDING TIME ════════════ */
+function onHoldSrc(src){
+  const isCust = src==='cust';
+  document.getElementById('hold-rr-calc').classList.toggle('active',!isCust);
+  document.getElementById('hold-rr-cust').classList.toggle('active',isCust);
+  // When "calc" chosen and G has data: pre-fill inputs
+  if(!isCust && G.ke && G.Ct){
+    document.getElementById('hold-ke').value = G.ke.toFixed(5);
+    document.getElementById('hold-ct').value = G.Ct;
+    document.getElementById('hold-auto-sum').style.display='flex';
+    document.getElementById('hold-ps-ke').textContent = G.ke.toFixed(5)+' hr⁻¹';
+    document.getElementById('hold-ps-ct').textContent = G.Ct+' mg/L';
+    document.getElementById('hold-calc-badge').textContent='';
+  } else {
+    document.getElementById('hold-auto-sum').style.display='none';
+  }
+  calcHoldTime();
+}
+function calcHoldTime(){
+  const ke_v = +document.getElementById('hold-ke').value;
+  const Ct_v = +document.getElementById('hold-ct').value;
+  if(!ke_v||!Ct_v||ke_v<=0||Ct_v<=0){
+    document.getElementById('hold-res').classList.remove('show');
+    return;
+  }
+  if(Ct_v < 20){
+    document.getElementById('hold-res').classList.remove('show');
+    document.getElementById('hold-res').style.display='block';
+    document.getElementById('hold-res').classList.add('show');
+    document.getElementById('hold-t-hi').textContent = '—';
+    document.getElementById('hold-t-pref').textContent = 'Not supratherapeutic (C < 20)';
+    document.getElementById('hold-t-lo').textContent = '—';
+    document.getElementById('hold-sugg').innerHTML = '<span style="color:var(--green);">Trough is within or below therapeutic range — no hold needed.</span>';
+    return;
+  }
+  const tHi   = (Math.log(Ct_v) - Math.log(19.99)) / ke_v;
+  const tPref = (Math.log(Ct_v) - Math.log(17.5))  / ke_v;
+  const tLo   = (Math.log(Ct_v) - Math.log(15.0))  / ke_v;
+  // Conc at each boundary time (for display)
+  const cAtHi   = Ct_v * Math.exp(-ke_v * tHi);
+  const cAtPref = Ct_v * Math.exp(-ke_v * tPref);
+  const cAtLo   = Ct_v * Math.exp(-ke_v * tLo);
+  document.getElementById('hold-t-hi').textContent   = tHi.toFixed(2)+' hr';
+  document.getElementById('hold-t-pref').textContent = tPref.toFixed(2)+' hr';
+  document.getElementById('hold-t-lo').textContent   = tLo.toFixed(2)+' hr';
+
+  // Suggested round-hour candidates with conc in parentheses
+  const candidates = [];
+  const step = (tLo - tHi) < 3 ? 0.5 : 1;
+  let v = Math.ceil(tHi / step) * step;
+  while(v <= tLo + 0.001){
+    if(v >= tHi) candidates.push(v);
+    v = Math.round((v + step) * 100) / 100;
+  }
+  candidates.sort((a,b)=>a-b);
+  const preferred = candidates.filter(h=>h>=tPref);
+  let suggHTML = '';
+  if(candidates.length===0){
+    const cAtP = Ct_v*Math.exp(-ke_v*tPref);
+    suggHTML = '<span style="color:var(--muted);">No exact round hour fits. Use </span>'
+      +'<span style="color:var(--green);">'+tPref.toFixed(1)+' hr</span>'
+      +' <span style="color:var(--muted);">(C ≈ </span>'
+      +'<span style="color:var(--green);">'+cAtP.toFixed(2)+' mg/L</span>'
+      +'<span style="color:var(--muted);">)</span>';
+  } else {
+    suggHTML = candidates.map(h=>{
+      const c = Ct_v*Math.exp(-ke_v*h);
+      const isPref = h>=tPref;
+      const hLabel = h%1===0 ? h+'h' : h+'h';
+      const starLabel = isPref ? ' ⭐' : '';
+      const col = isPref ? 'var(--green)' : 'var(--yellow)';
+      return '<span style="color:'+col+';margin-right:14px;">'
+        + hLabel + starLabel
+        + ' <span style="color:var(--muted);font-size:10px;">(C ≈ '+c.toFixed(2)+' mg/L)</span>'
+        + '</span>';
+    }).join('');
+  }
+  document.getElementById('hold-sugg').innerHTML = suggHTML;
+  document.getElementById('hold-res').classList.add('show');
+}
+// Called after calcSingle succeeds — pre-fills hold inputs if "calc" source selected
+function maybeShowHoldCard(Ct){
+  const src = document.querySelector('input[name="hold-src"]:checked')?.value||'cust';
+  if(src==='calc'){
+    document.getElementById('hold-ke').value = G.ke.toFixed(5);
+    document.getElementById('hold-ct').value = Ct;
+    document.getElementById('hold-auto-sum').style.display='flex';
+    document.getElementById('hold-ps-ke').textContent = G.ke.toFixed(5)+' hr⁻¹';
+    document.getElementById('hold-ps-ct').textContent = Ct+' mg/L';
+    document.getElementById('hold-calc-badge').textContent='';
+  }
+  calcHoldTime();
+}
+
 /* ════════════ DRAW GRAPH (single) ════════════ */
+/* ════════════ PROXY GRAPH ════════════ */
+function drawProxyGraph(ke,D,Vd,tau,Ctrough){
+  const canvas=document.getElementById('pk-canvas');
+  const wrap=document.getElementById('graph-wrap');
+  wrap.style.display='block';
+  const dpr=window.devicePixelRatio||1;
+  const W=wrap.clientWidth-28;
+  const H=Math.round(W*0.46);
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={t:16,r:18,b:46,l:54};
+  const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  // Bolus model: Cpeak = Ctrough + D/Vd at t=0.1; decay after that
+  const Cpeak = Ctrough + D/Vd;
+  const N=4; // show 4 doses approaching SS
+  const total=N*tau;
+  // Build SS multi-dose bolus profile
+  // At steady state: Ctrough_SS = (D/Vd) / (e^(ke*tau) - 1)
+  // Cpeak_SS = Ctrough_SS + D/Vd
+  const CtroughSS = (D/Vd) / (Math.exp(ke*tau)-1);
+  const CpeakSS   = CtroughSS + D/Vd;
+  // Simulate build-up: dose j (0-indexed) at t = j*tau
+  // After dose j: C(t) = sum of contributions from each dose up to j
+  // Contribution from dose i at time t after that dose: (D/Vd)*e^(-ke*(t - i*tau)) for t>=i*tau
+  function concBolus(t){
+    let C=0;
+    for(let i=0;i<N;i++){
+      const dt=t-i*tau;
+      if(dt>=0) C+=(D/Vd)*Math.exp(-ke*dt);
+    }
+    return C;
+  }
+  const pts=600; const times=[],concs=[];
+  for(let i=0;i<=pts;i++){const t=i/pts*total;times.push(t);concs.push(concBolus(t));}
+  const maxC=Math.max(...concs)*1.25;
+  const tx=t=>pad.l+(t/total)*gW;
+  const ty=c=>pad.t+gH-(c/maxC)*gH;
+  // Grid
+  for(let i=0;i<=5;i++){
+    const y=pad.t+(i/5)*gH;
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='right';
+    ctx.fillText((maxC*(1-i/5)).toFixed(1),pad.l-7,y+4);
+  }
+  for(let i=0;i<=N;i++){
+    const x=tx(i*tau);
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='center';
+    ctx.fillText((i*tau).toFixed(0),x,pad.t+gH+18);
+  }
+  ctx.fillStyle=gAxisLabelColor();ctx.font='11px DM Sans';ctx.textAlign='center';
+  ctx.fillText('Time (hr)',pad.l+gW/2,H-4);
+  ctx.save();ctx.translate(13,pad.t+gH/2);ctx.rotate(-Math.PI/2);ctx.fillText('Conc. (mg/L)',0,0);ctx.restore();
+  // Dose markers
+  ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(255,214,0,.22)';ctx.lineWidth=1;
+  for(let j=0;j<N;j++){const x=tx(j*tau);ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();}
+  ctx.setLineDash([]);
+  // Fill under curve
+  ctx.beginPath();ctx.moveTo(tx(0),ty(0));
+  for(let i=0;i<times.length;i++) ctx.lineTo(tx(times[i]),ty(concs[i]));
+  ctx.lineTo(tx(times[times.length-1]),ty(0));ctx.closePath();
+  const fg=ctx.createLinearGradient(0,pad.t,0,pad.t+gH);
+  fg.addColorStop(0,'rgba(0,229,255,.11)');fg.addColorStop(1,'rgba(0,229,255,0)');
+  ctx.fillStyle=fg;ctx.fill();
+  // Draw curve
+  const lg=ctx.createLinearGradient(pad.l,0,pad.l+gW,0);
+  lg.addColorStop(0,'#00e5ff');lg.addColorStop(0.5,'#9d4fff');lg.addColorStop(1,'#ff0088');
+  ctx.beginPath();ctx.moveTo(tx(times[0]),ty(concs[0]));
+  for(let i=1;i<times.length;i++) ctx.lineTo(tx(times[i]),ty(concs[i]));
+  ctx.strokeStyle=lg;ctx.lineWidth=2.5;ctx.stroke();
+  // --- Two special dots on the LAST (most SS-like) dose interval ---
+  const lastDoseT=(N-1)*tau;
+  // Ctrough (measured): just before last dose = C(lastDoseT - epsilon)
+  const x_tr=tx(lastDoseT);
+  const y_tr=ty(concBolus(lastDoseT-0.001>0?lastDoseT-0.001:0));
+  // Cpeak: just after last dose (instantaneous rise)
+  const y_pk=ty(concBolus(lastDoseT)+D/Vd);  // peak right after dose
+  // Trough dot — magenta
+  ctx.beginPath();ctx.arc(x_tr,y_tr,9,0,Math.PI*2);ctx.strokeStyle='rgba(255,0,136,.25)';ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(x_tr,y_tr,5,0,Math.PI*2);ctx.fillStyle='#ff0088';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#ff0088';ctx.font='bold 10px Space Mono';ctx.textAlign='right';
+  ctx.fillText('C trough',x_tr-10,y_tr-5);
+  ctx.fillText(concBolus(lastDoseT-0.001>0?lastDoseT-0.001:0).toFixed(1)+' mg/L',x_tr-10,y_tr+8);
+  // Peak dot — cyan (just after dose injection)
+  ctx.beginPath();ctx.arc(x_tr,y_pk,9,0,Math.PI*2);ctx.strokeStyle='rgba(0,229,255,.25)';ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(x_tr,y_pk,5,0,Math.PI*2);ctx.fillStyle='#00e5ff';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='#00e5ff';ctx.font='bold 10px Space Mono';ctx.textAlign='right';
+  ctx.fillText('C peak',x_tr-10,y_pk-5);
+  ctx.fillText((concBolus(lastDoseT)+D/Vd).toFixed(1)+' mg/L',x_tr-10,y_pk+8);
+  // Axes
+  ctx.strokeStyle=isDark()?'rgba(104,104,160,.45)':'rgba(80,110,150,.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
+}
+
 function drawGraph(ke,D,Vd,tp,tau,N,t_draw,Ct_m){
   const canvas=document.getElementById('pk-canvas');
   const wrap=document.getElementById('graph-wrap');
@@ -1117,12 +1530,66 @@ function calcVdTwo(){
 
 /* ═══ AUC METHOD TOGGLE ═══ */
 let aucMethod='trad';
+/* ════════════ SSTA AUC ════════════ */
+let sstaSrc = 'prev';
+function onSstaSrc(src){
+  sstaSrc = src;
+  const isCust = src==='cust';
+  document.getElementById('ssta-rr-prev').classList.toggle('active',!isCust);
+  document.getElementById('ssta-rr-cust').classList.toggle('active',isCust);
+  document.getElementById('ssta-prev-sum').style.display = isCust?'none':'flex';
+  document.getElementById('ssta-cust-in').style.display  = isCust?'grid':'none';
+  calcSstaAUC();
+}
+function refreshSstaPrevSum(){
+  // Pull values from TS (two-sample ke) and TS2 (vd) if available
+  const ct   = TS.Ct  || null;
+  const vd   = TS2.Vd || null;
+  const dose = TS2.D  || null;
+  document.getElementById('ssta-ps-ct').textContent   = ct   ? ct+' mg/L'   : '—';
+  document.getElementById('ssta-ps-vd').textContent   = vd   ? vd.toFixed(2)+' L' : '—';
+  document.getElementById('ssta-ps-dose').textContent = dose ? dose+' mg'   : '—';
+}
+function calcSstaAUC(){
+  // Always-visible inputs in Single Sample tab
+  const Ct = +document.getElementById('sc-ct').value;
+  const Vd = +document.getElementById('sc-vd').value;
+  const D  = +document.getElementById('sc-dose').value;
+
+  // Hide result boxes until we have valid data
+  document.getElementById('ssta-auc-box').style.display='none';
+  document.getElementById('ssta-mic-box').style.display='none';
+
+  if(!Ct||!Vd||!D||Ct<=0||Vd<=0||D<=0) return;
+  const arg = 1 + D/(Vd*Ct);
+  if(arg<=1) return;
+  const AUC = (D * 24) / (Vd * Math.log(arg));
+  if(!isFinite(AUC)||AUC<=0) return;
+
+  document.getElementById('ssta-auc-val').textContent = AUC.toFixed(2);
+  document.getElementById('ssta-auc-box').style.display = 'block';
+  document.getElementById('ssta-auc-box').classList.add('show');
+
+  const mic = +document.getElementById('ssta-mic').value||0;
+  if(mic>0){
+    const ratio = AUC/mic;
+    document.getElementById('ssta-mic-val').textContent = ratio.toFixed(1);
+    document.getElementById('ssta-mic-box').style.display = 'block';
+    document.getElementById('ssta-mic-box').classList.add('show');
+  }
+}
+
 function onAucMethod(m){
   aucMethod=m;
-  document.getElementById('mth-trad').classList.toggle('active',m==='trad');
-  document.getElementById('mth-intg').classList.toggle('active',m==='intg');
-  document.getElementById('trad-wrap').style.display=m==='trad'?'block':'none';
-  document.getElementById('intg-wrap').style.display=m==='intg'?'block':'none';
+  // Toggle method buttons (trad + intg only in Two Samples tab)
+  ['trad','intg'].forEach(k=>{
+    const el=document.getElementById('mth-'+k);
+    if(el) el.classList.toggle('active',k===m);
+  });
+  // Show/hide content wraps
+  document.getElementById('trad-wrap').style.display = m==='trad'?'block':'none';
+  document.getElementById('intg-wrap').style.display = m==='intg'?'block':'none';
+  // Hide shared result boxes, let triggered calc show its own
   hideAUCResults();
   triggerAUC();
 }
@@ -1131,6 +1598,22 @@ function hideAUCResults(){
   document.getElementById('auc-res-box').classList.remove('show');
   document.getElementById('aucmic-res-box').classList.remove('show');
   document.getElementById('auc-graph-wrap').style.display='none';
+  // Also hide SSTA-specific boxes
+  const sb1=document.getElementById('ssta-auc-box');
+  const sb2=document.getElementById('ssta-mic-box');
+  if(sb1){sb1.style.display='none';sb1.classList.remove('show');}
+  if(sb2){sb2.style.display='none';sb2.classList.remove('show');}
+}
+function showAUCResults(AUC, mic){
+  document.getElementById('auc-res-val').textContent = AUC.toFixed(2);
+  document.getElementById('auc-res-box').classList.add('show');
+  if(mic>0){
+    const ratio = AUC/mic;
+    document.getElementById('aucmic-res-val').textContent = ratio.toFixed(1);
+    document.getElementById('aucmic-res-box').classList.add('show');
+  } else {
+    document.getElementById('aucmic-res-box').classList.remove('show');
+  }
 }
 
 function onTradSrc(src){
