@@ -687,10 +687,11 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
       <div class="card green" id="auc-card">
         <div class="card-ttl grn"><div class="dot grn"></div>③ AUC Calculation (0–24 h)</div>
 
-        <!-- Method toggle — Traditional & Integral only -->
+        <!-- Method toggle — Traditional, Integral, Mass Balance -->
         <div class="method-toggle">
           <div class="mth-btn active" id="mth-trad" onclick="onAucMethod('trad')">Traditional AUC</div>
           <div class="mth-btn" id="mth-intg" onclick="onAucMethod('intg')">Integral AUC</div>
+          <div class="mth-btn" id="mth-mbal" onclick="onAucMethod('mbal')">Mass Balance AUC</div>
         </div>
 
         <!-- ── TRADITIONAL AUC ── -->
@@ -745,15 +746,15 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
 
         <!-- ── INTEGRAL AUC ── -->
         <div id="intg-wrap" style="display:none;">
-          <div class="eq-box" style="border-color:rgba(0,255,179,.18);color:var(--green);font-size:clamp(9px,2.1vw,12px);">
-            AUC<sub>0−24</sub> =
-            <span class="eq-frac">
-              <span class="eq-num" style="border-color:var(--green);">24</span>
-              <span class="eq-den">τ</span>
-            </span>
-            · ∫<sub>0</sub><sup>τ</sup> C<sub>ss</sub>(t) dt
-            &nbsp;|&nbsp;
-            C<sub>ss</sub> = Multiple Intermittent IV (steady state)
+          <div class="eq-box" style="border-color:rgba(0,255,179,.18);color:var(--green);font-size:clamp(9px,2.1vw,12px);flex-direction:column;gap:6px;">
+            <div>AUC<sub>0−24</sub> =
+              <span class="eq-frac" style="display:inline-flex;vertical-align:middle;">
+                <span class="eq-num" style="border-color:var(--green);">24</span>
+                <span class="eq-den">τ</span>
+              </span>
+              · ∫<sub>0</sub><sup>τ</sup> C<sub>n</sub>(t) dt
+            </div>
+            <div id="intg-eq-label" style="font-size:9px;color:rgba(0,255,179,.6);">C<sub>ss</sub>(t) = Multiple Intermittent IV — Steady State</div>
           </div>
 
           <div class="radio-row">
@@ -785,9 +786,93 @@ footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px
             </div>
           </div>
 
-          <div class="in-grid" style="margin-bottom:0;">
+          <div class="in-grid">
             <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field" type="number" id="intg-tau" placeholder="e.g. 12" oninput="calcIntegralAUC()"></div>
             <div class="in-grp"><label class="in-label">MIC (mg/L) <span style="color:var(--dim);font-size:9px;">OPT</span></label><input class="in-field" type="number" id="intg-mic" placeholder="e.g. 1" step="0.001" oninput="calcIntegralAUC()"></div>
+          </div>
+
+          <!-- N-dose toggle -->
+          <div style="padding-top:14px;border-top:1px solid rgba(0,255,179,.12);margin-top:4px;">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Accumulation State</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+              <div class="dose-pill pill-sel" id="intg-ss-btn" onclick="onIntgState('ss')" style="border-color:rgba(0,255,179,.4);color:var(--green);">Steady State (SS)</div>
+              <div class="dose-pill" id="intg-nd-btn" onclick="onIntgState('ndose')">After N Doses</div>
+            </div>
+            <div id="intg-ndose-wrap" style="display:none;">
+              <div class="in-grid" style="margin-bottom:4px;">
+                <div class="in-grp">
+                  <label class="in-label">Number of doses — N</label>
+                  <input class="in-field" type="number" id="intg-ndose" placeholder="e.g. 3" min="1" step="1" oninput="calcIntegralAUC()">
+                </div>
+              </div>
+              <div class="info-note" style="margin-bottom:0;border-color:rgba(0,255,179,.15);background:rgba(0,255,179,.03);font-size:11px;">
+                AF = (1 − e<sup>−N·k<sub>e</sub>·τ</sup>) / (1 − e<sup>−k<sub>e</sub>·τ</sup>) &nbsp;→&nbsp; N=1: first dose &nbsp;|&nbsp; N→∞: steady state
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── MASS BALANCE AUC ── -->
+        <div id="mbal-wrap" style="display:none;">
+          <div class="eq-box" style="border-color:rgba(0,229,255,.18);color:var(--cyan);font-size:clamp(9px,2.1vw,12px);flex-direction:column;gap:8px;">
+            <div>AUC<sub>0–24</sub> =
+              <span class="eq-frac" style="display:inline-flex;vertical-align:middle;">
+                <span class="eq-num" style="border-color:var(--cyan);">Dose × 24</span>
+                <span class="eq-den">k<sub>e</sub> · V<sub>d</sub> · τ</span>
+              </span>
+              &nbsp;=&nbsp;
+              <span class="eq-frac" style="display:inline-flex;vertical-align:middle;">
+                <span class="eq-num" style="border-color:var(--cyan);">D</span>
+                <span class="eq-den">k<sub>e</sub> · V<sub>d</sub></span>
+              </span>
+              &nbsp;×&nbsp;
+              <span class="eq-frac" style="display:inline-flex;vertical-align:middle;">
+                <span class="eq-num" style="border-color:var(--cyan);">24</span>
+                <span class="eq-den">τ</span>
+              </span>
+            </div>
+            <div style="font-size:9px;color:rgba(0,229,255,.55);">Steady-state mass balance: amount in = amount out per interval · No infusion shape required</div>
+          </div>
+
+          <div class="radio-row">
+            <label class="radio-opt active" id="mbal-rr-prev" style="border-color:rgba(0,229,255,.3);" onclick="onMbalSrc('prev')">
+              <input type="radio" name="mbal-src" value="prev" checked style="accent-color:var(--cyan)">
+              <span class="radio-lbl">Use previous values</span>
+            </label>
+            <label class="radio-opt" id="mbal-rr-cust" onclick="onMbalSrc('cust')">
+              <input type="radio" name="mbal-src" value="cust" style="accent-color:var(--cyan)">
+              <span class="radio-lbl">Personalised values</span>
+            </label>
+          </div>
+
+          <div class="prev-sum" id="mbal-prev-sum">
+            <span class="prev-item">k<sub>e</sub>: <span id="mbal-ps-ke">—</span></span>
+            <span class="prev-item">V<sub>d</sub>: <span id="mbal-ps-vd">—</span></span>
+            <span class="prev-item">D: <span id="mbal-ps-dose">—</span></span>
+          </div>
+          <div id="mbal-notice" class="notice-box" style="display:none;">⚠ Complete Steps ①② above, or switch to Personalised.</div>
+          <div id="mbal-cust-in" style="display:none;">
+            <div class="in-grid">
+              <div class="in-grp"><label class="in-label">k<sub>e</sub> (hr⁻¹)</label><input class="in-field cyn" type="number" id="mb-ke" placeholder="e.g. 0.120" step="0.001" oninput="calcMassBalAUC()"></div>
+              <div class="in-grp"><label class="in-label">V<sub>d</sub> (L)</label><input class="in-field cyn" type="number" id="mb-vd" placeholder="e.g. 49" oninput="calcMassBalAUC()"></div>
+              <div class="in-grp"><label class="in-label">Dose — D (mg)</label><input class="in-field cyn" type="number" id="mb-dose" placeholder="e.g. 1000" oninput="calcMassBalAUC()"></div>
+            </div>
+          </div>
+          <div class="in-grid" style="margin-bottom:0;">
+            <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field cyn" type="number" id="mbal-tau" placeholder="e.g. 12" oninput="calcMassBalAUC()"></div>
+            <div class="in-grp"><label class="in-label">MIC (mg/L) <span style="color:var(--dim);font-size:9px;">OPT</span></label><input class="in-field" type="number" id="mbal-mic" placeholder="e.g. 1" step="0.001" oninput="calcMassBalAUC()"></div>
+          </div>
+
+          <!-- Mass Balance own result boxes -->
+          <div class="auc-res" id="mbal-auc-box" style="margin-top:16px;">
+            <div class="auc-lbl">AUC<sub>0–24h</sub> (Mass Balance)</div>
+            <div class="auc-val" id="mbal-auc-val" style="color:var(--cyan);">—</div>
+            <div class="auc-unit">mg · hr / L</div>
+          </div>
+          <div class="auc-res" id="mbal-mic-box" style="border-color:rgba(157,79,255,.3);background:rgba(157,79,255,.05);">
+            <div class="auc-lbl" style="color:var(--purple);">AUC<sub>0–24h</sub> / MIC</div>
+            <div class="auc-val" id="mbal-mic-val" style="color:var(--purple);filter:drop-shadow(0 0 7px rgba(157,79,255,.4));">—</div>
+            <div class="auc-unit">hr (target ≥ 400–600)</div>
           </div>
         </div>
 
@@ -1104,12 +1189,31 @@ function Css(t,ke,D,Vd,tp,tau){
   if(t<=tp) return k0*(1-Math.exp(-ke*t))+k0*(1-Math.exp(-ke*tp))*Math.exp(-ke*(t+tau-tp))*ss;
   return k0*(1-Math.exp(-ke*tp))*Math.exp(-ke*(t-tp))*ss;
 }
-// Simpson's rule integral of Css over [0,tau]
-function integrateOneSS(ke,D,Vd,tp,tau){
-  const N=1000;
-  const h=tau/N;
-  let s=Css(0,ke,D,Vd,tp,tau)+Css(tau,ke,D,Vd,tp,tau);
-  for(let i=1;i<N;i++) s+=(i%2===0?2:4)*Css(i*h,ke,D,Vd,tp,tau);
+// Keep integrateOneSS as alias to integrateNDose(SS)
+function integrateOneSS(ke,D,Vd,tp,tau){return integrateNDose(ke,D,Vd,tp,tau,null);}
+// Generalised integral for n doses:
+//  0<=t<=tp:  C = k0(1-e^-ket) + k0(1-e^-ket') * AF_prev * e^-ke(t+tau-tp)
+//  tp<t<=tau: C = k0(1-e^-ket') * AF_N * e^-ke(t-tp)
+//  AF_prev=(1-e^-(n-1)ke*tau)/(1-e^-ke*tau), AF_N=(1-e^-n*ke*tau)/(1-e^-ke*tau)
+//  null/undefined/>=9999 = SS
+function integrateNDose(ke,D,Vd,tp,tau,n){
+  const k0=D/(ke*Vd*tp);
+  const denom=1-Math.exp(-ke*tau);
+  const isSS=(n===null||n===undefined||n>=9999);
+  function Cn(t){
+    if(isSS){
+      const AF=1/denom;
+      if(t<=tp) return k0*(1-Math.exp(-ke*t))+k0*(1-Math.exp(-ke*tp))*AF*Math.exp(-ke*(t+tau-tp));
+      return k0*(1-Math.exp(-ke*tp))*AF*Math.exp(-ke*(t-tp));
+    }
+    const AF_prev=n>1?(1-Math.exp(-(n-1)*ke*tau))/denom:0;
+    const AF_N=(1-Math.exp(-n*ke*tau))/denom;
+    if(t<=tp) return k0*(1-Math.exp(-ke*t))+k0*(1-Math.exp(-ke*tp))*AF_prev*Math.exp(-ke*(t+tau-tp));
+    return k0*(1-Math.exp(-ke*tp))*AF_N*Math.exp(-ke*(t-tp));
+  }
+  const steps=1000;const h=tau/steps;
+  let s=Cn(0)+Cn(tau);
+  for(let i=1;i<steps;i++) s+=(i%2===0?2:4)*Cn(i*h);
   return s*h/3;
 }
 function solveKe(D,Vd,tp,tau,N,t,Ct){
@@ -1673,30 +1777,73 @@ function calcSstaAUC(){
   }
 }
 
+
+/* ===== MASS BALANCE AUC ===== */
+function onMbalSrc(src){
+  const isCust=src==='cust';
+  document.getElementById('mbal-rr-prev').classList.toggle('active',!isCust);
+  document.getElementById('mbal-rr-cust').classList.toggle('active',isCust);
+  document.querySelector('input[name="mbal-src"][value="'+src+'"]').checked=true;
+  document.getElementById('mbal-prev-sum').style.display=isCust?'none':'flex';
+  document.getElementById('mbal-cust-in').style.display=isCust?'block':'none';
+  calcMassBalAUC();
+}
+function calcMassBalAUC(){
+  ['mbal-auc-box','mbal-mic-box'].forEach(id=>document.getElementById(id).classList.remove('show'));
+  document.getElementById('mbal-notice').style.display='none';
+  const isCust=document.querySelector('input[name="mbal-src"]:checked')?.value==='cust';
+  let ke,Vd,D;
+  if(!isCust){
+    if(!TS.ke||!TS2.Vd||!TS2.D){
+      document.getElementById('mbal-notice').style.display='block';return;
+    }
+    ke=TS.ke; Vd=TS2.Vd; D=TS2.D;
+    document.getElementById('mbal-ps-ke').textContent=ke.toFixed(5)+' hr\u207B\u00B9';
+    document.getElementById('mbal-ps-vd').textContent=Vd.toFixed(2)+' L';
+    document.getElementById('mbal-ps-dose').textContent=D+' mg';
+    document.getElementById('mbal-prev-sum').style.display='flex';
+  } else {
+    ke=+document.getElementById('mb-ke').value||0;
+    Vd=+document.getElementById('mb-vd').value||0;
+    D=+document.getElementById('mb-dose').value||0;
+  }
+  const tau=+document.getElementById('mbal-tau').value||0;
+  const mic=+document.getElementById('mbal-mic').value||0;
+  if(!ke||!Vd||!D||!tau||ke<=0||Vd<=0||D<=0||tau<=0) return;
+  const AUC=(D/(ke*Vd))*(24/tau);
+  if(!isFinite(AUC)||AUC<=0) return;
+  document.getElementById('mbal-auc-val').textContent=AUC.toFixed(2);
+  document.getElementById('mbal-auc-box').classList.add('show');
+  if(mic>0){
+    document.getElementById('mbal-mic-val').textContent=(AUC/mic).toFixed(1);
+    document.getElementById('mbal-mic-box').classList.add('show');
+  }
+}
 function onAucMethod(m){
   aucMethod=m;
-  // Toggle method buttons (trad + intg only in Two Samples tab)
-  ['trad','intg'].forEach(k=>{
+  ['trad','intg','mbal'].forEach(k=>{
     const el=document.getElementById('mth-'+k);
     if(el) el.classList.toggle('active',k===m);
   });
-  // Show/hide content wraps
   document.getElementById('trad-wrap').style.display = m==='trad'?'block':'none';
   document.getElementById('intg-wrap').style.display = m==='intg'?'block':'none';
-  // Hide shared result boxes, let triggered calc show its own
+  document.getElementById('mbal-wrap').style.display = m==='mbal'?'block':'none';
   hideAUCResults();
   triggerAUC();
 }
-function triggerAUC(){if(aucMethod==='trad') calcTradAUC(); else calcIntegralAUC();}
+function triggerAUC(){
+  if(aucMethod==='trad') calcTradAUC();
+  else if(aucMethod==='mbal') calcMassBalAUC();
+  else calcIntegralAUC();
+}
 function hideAUCResults(){
   document.getElementById('auc-res-box').classList.remove('show');
   document.getElementById('aucmic-res-box').classList.remove('show');
   document.getElementById('auc-graph-wrap').style.display='none';
-  // Also hide SSTA-specific boxes
-  const sb1=document.getElementById('ssta-auc-box');
-  const sb2=document.getElementById('ssta-mic-box');
-  if(sb1){sb1.style.display='none';sb1.classList.remove('show');}
-  if(sb2){sb2.style.display='none';sb2.classList.remove('show');}
+  ['ssta-auc-box','ssta-mic-box','mbal-auc-box','mbal-mic-box'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('show');
+  });
 }
 function showAUCResults(AUC, mic){
   document.getElementById('auc-res-val').textContent = AUC.toFixed(2);
@@ -1763,6 +1910,26 @@ function calcTradAUC(){
 }
 
 /* ═══ INTEGRAL AUC ═══ */
+let intgState='ss';
+function onIntgState(s){
+  intgState=s;
+  const ssBtn=document.getElementById('intg-ss-btn');
+  const ndBtn=document.getElementById('intg-nd-btn');
+  const ndWrap=document.getElementById('intg-ndose-wrap');
+  ssBtn.classList.toggle('pill-sel',s==='ss');
+  ndBtn.classList.toggle('pill-sel',s==='ndose');
+  ssBtn.style.borderColor=s==='ss'?'rgba(0,255,179,.4)':'';
+  ssBtn.style.color=s==='ss'?'var(--green)':'';
+  ndBtn.style.borderColor=s==='ndose'?'rgba(0,229,255,.4)':'';
+  ndBtn.style.color=s==='ndose'?'var(--cyan)':'';
+  ndWrap.style.display=s==='ndose'?'block':'none';
+  // Update the equation sub-label
+  const lbl=document.getElementById('intg-eq-label');
+  if(lbl) lbl.innerHTML=s==='ss'
+    ?'C<sub>ss</sub>(t) = Multiple Intermittent IV — Steady State'
+    :'C<sub>n</sub>(t) = Multiple Intermittent IV after N doses';
+  calcIntegralAUC();
+}
 function calcIntegralAUC(){
   const isCust=document.querySelector('input[name="intg-src"]:checked')?.value==='cust';
   let ke,Vd,D,tp;
@@ -1781,7 +1948,12 @@ function calcIntegralAUC(){
   const tau=+document.getElementById('intg-tau').value;
   const mic=+document.getElementById('intg-mic').value||0;
   if(!ke||!Vd||!D||!tp||!tau||ke<=0||Vd<=0||D<=0||tp<=0||tau<=0||tp>=tau){hideAUCResults();return;}
-  const AUC_int=integrateOneSS(ke,D,Vd,tp,tau);
+  let nDoses=null;
+  if(intgState==='ndose'){
+    const nVal=+document.getElementById('intg-ndose').value||0;
+    if(nVal>=1) nDoses=Math.round(nVal);
+  }
+  const AUC_int=integrateNDose(ke,D,Vd,tp,tau,nDoses);
   const AUC24=AUC_int*(24/tau);
   if(!isFinite(AUC24)||AUC24<=0){hideAUCResults();return;}
   document.getElementById('auc-res-val').textContent=AUC24.toFixed(2);
@@ -1789,8 +1961,11 @@ function calcIntegralAUC(){
   let ratio=null;
   if(mic>0){ratio=AUC24/mic;document.getElementById('aucmic-res-val').textContent=ratio.toFixed(1);document.getElementById('aucmic-res-box').classList.add('show');}
   else document.getElementById('aucmic-res-box').classList.remove('show');
+  const nLbl=nDoses?'(N='+nDoses+' doses)':'(SS)';
+  const eqEl=document.getElementById('intg-eq-label');
+  if(eqEl) eqEl.textContent='Cn '+nLbl+' via superposition + Simpson integration';
   document.getElementById('auc-graph-wrap').style.display='block';
-  drawIntegralAUCGraph(ke,D,Vd,tp,tau,AUC24,mic||null,ratio);
+  drawIntegralAUCGraph(ke,D,Vd,tp,tau,AUC24,mic||null,ratio,nDoses);
 }
 
 /* ═══ DRAW TRADITIONAL AUC GRAPH ═══ */
@@ -1845,7 +2020,7 @@ function drawTradAUCGraph(Csoi,CminAdj,Cpeak,Ctrough,ke,tp,t2,tau_int,AUC24,mic,
 }
 
 /* ═══ DRAW INTEGRAL AUC GRAPH ═══ */
-function drawIntegralAUCGraph(ke,D,Vd,tp,tau,AUC24,mic,ratio){
+function drawIntegralAUCGraph(ke,D,Vd,tp,tau,AUC24,mic,ratio,nDoses){
   const canvas=document.getElementById('auc-canvas');
   const wrap=document.getElementById('auc-graph-wrap');
   const dpr=window.devicePixelRatio||1;
@@ -1859,7 +2034,16 @@ function drawIntegralAUCGraph(ke,D,Vd,tp,tau,AUC24,mic,ratio){
   const pad={t:20,r:mic?8:18,b:50,l:54};
   const gW=curveW-pad.l-pad.r,gH=H-pad.t-pad.b;
   const total=24;const pts=600;const times=[],concs=[];
-  for(let i=0;i<=pts;i++){const t=i/pts*total;times.push(t);concs.push(Css(t%tau,ke,D,Vd,tp,tau));}
+    const k0g=D/(ke*Vd*tp),denomG=1-Math.exp(-ke*tau);
+  function CnG(t){
+    const isSS=(nDoses===null||nDoses===undefined);
+    const AFp=isSS?1/denomG:(nDoses>1?(1-Math.exp(-(nDoses-1)*ke*tau))/denomG:0);
+    const AFn=isSS?1/denomG:(1-Math.exp(-nDoses*ke*tau))/denomG;
+    const dt=t%tau;
+    if(dt<=tp) return k0g*(1-Math.exp(-ke*dt))+k0g*(1-Math.exp(-ke*tp))*AFp*Math.exp(-ke*(dt+tau-tp));
+    return k0g*(1-Math.exp(-ke*tp))*AFn*Math.exp(-ke*(dt-tp));
+  }
+for(let i=0;i<=pts;i++){const t=i/pts*total;times.push(t);concs.push(CnG(t));}
   const maxC=Math.max(...concs)*1.18;
   const tx=t=>pad.l+(t/total)*gW;
   const ty=c=>pad.t+gH-(c/maxC)*gH;
