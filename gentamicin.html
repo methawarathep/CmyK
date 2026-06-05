@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CmyK — Gentamicin PK</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070f;--surface:#0d0d1e;--card:#111126;--card2:#13132c;
+  --border:rgba(0,229,255,.12);
+  --cyan:#00e5ff;--magenta:#ff0088;--yellow:#ffd600;
+  --green:#00ffb3;--purple:#9d4fff;--orange:#ff7c00;
+  --text:#dde0ff;--muted:#6868a0;--dim:#32325a;
+  --in-bg:#09091c;--in-br:rgba(104,104,160,.3);
+  --gcyan:0 0 22px rgba(0,229,255,.35);
+  --gmagenta:0 0 22px rgba(255,0,136,.35);
+  --gyellow:0 0 18px rgba(255,214,0,.3);
+  --gorange:0 0 18px rgba(255,124,0,.3);
+  --grid-line:rgba(0,229,255,.025);--grid-glow:rgba(0,229,255,.07);
+  --footer-bg:rgba(7,7,15,.92);--footer-bdr:var(--dim);
+  --eq-bg:rgba(0,0,0,.4);--graph-bg:rgba(0,0,0,.35);
+  --input-text:#c8ccee;--label-text:#8888b8;
+}
+[data-theme="light"]{
+  --bg:#f0f4f8;--surface:#e4eaf2;--card:#ffffff;--card2:#f7f9fc;
+  --border:rgba(0,140,180,.2);
+  --cyan:#0088aa;--magenta:#cc0077;--yellow:#996600;
+  --green:#007a55;--purple:#6a2dbb;--orange:#c05a00;
+  --text:#18203a;--muted:#4e6080;--dim:#9aafcc;
+  --in-bg:#eaf0f8;--in-br:rgba(80,120,160,.25);
+  --gcyan:0 0 16px rgba(0,136,170,.18);
+  --gmagenta:0 0 16px rgba(204,0,119,.18);
+  --gyellow:0 0 12px rgba(153,102,0,.15);
+  --gorange:0 0 12px rgba(192,90,0,.18);
+  --grid-line:rgba(0,100,160,.04);--grid-glow:rgba(0,100,160,.03);
+  --footer-bg:rgba(226,234,244,.97);--footer-bdr:rgba(0,120,180,.18);
+  --eq-bg:rgba(220,232,245,.55);--graph-bg:rgba(220,232,245,.45);
+  --input-text:#18203a;--label-text:#4e6080;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,var(--grid-glow),transparent);pointer-events:none;z-index:0;}
+#theme-toggle{position:fixed;top:12px;right:14px;z-index:500;background:var(--card);border:1px solid var(--border);border-radius:50px;padding:7px 13px;cursor:pointer;font-size:16px;transition:all .28s;display:flex;align-items:center;gap:6px;box-shadow:0 2px 12px rgba(0,0,0,.3);}
+#theme-toggle:hover{border-color:var(--cyan);box-shadow:var(--gcyan);}
+#theme-toggle .tt-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;}
+#graph-lightbox{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.88);align-items:center;justify-content:center;padding:16px;cursor:zoom-out;}
+#graph-lightbox.open{display:flex;animation:lbIn .2s ease;}
+#lb-canvas-wrap{background:var(--card);border-radius:14px;padding:16px;max-width:min(96vw,1100px);width:100%;border:1px solid var(--border);}
+#lb-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;}
+#lb-canvas{width:100%;height:auto;border-radius:6px;display:block;}
+#lb-close{position:absolute;top:18px;right:18px;background:rgba(0,0,0,.5);border:1px solid var(--border);color:var(--text);border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+#lb-close:hover{border-color:var(--magenta);color:var(--magenta);}
+@keyframes lbIn{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+/* Layout */
+#page-amk{padding:26px 18px 110px;max-width:920px;margin:0 auto;position:relative;z-index:1;}
+.page-hdr{display:flex;align-items:center;gap:14px;margin-bottom:6px;animation:floatIn .5s ease;}
+.btn-sm-back{background:transparent;border:1px solid var(--border);border-radius:8px;padding:7px 15px;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:6px;}
+.btn-sm-back:hover{border-color:var(--cyan);color:var(--cyan);}
+.page-ttl{font-family:'Orbitron',monospace;font-size:clamp(18px,5vw,28px);color:var(--orange);filter:drop-shadow(0 0 10px rgba(255,124,0,.4));}
+.page-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:22px;}
+/* Target bar */
+.target-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;animation:floatIn .6s .1s ease both;}
+.tgt-chip{padding:6px 14px;border-radius:50px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.5px;display:flex;align-items:center;gap:6px;}
+.tgt-chip.mdd{background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.25);color:var(--cyan);}
+.tgt-chip.eid{background:rgba(255,124,0,.07);border:1px solid rgba(255,124,0,.25);color:var(--orange);}
+.tgt-chip.pk{background:rgba(157,79,255,.07);border:1px solid rgba(157,79,255,.25);color:var(--purple);}
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:26px;}
+.tab{flex:1;padding:11px 6px;background:transparent;border:none;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:clamp(10px,2.2vw,13px);font-weight:600;color:var(--muted);cursor:pointer;transition:all .3s;letter-spacing:.3px;}
+.tab.active{background:linear-gradient(135deg,rgba(255,124,0,.14),rgba(255,0,136,.09));color:var(--orange);box-shadow:inset 0 0 18px rgba(255,124,0,.08);}
+.tab-content{display:none;}
+.tab-content.active{display:block;animation:floatIn .35s ease;}
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 20px;margin-bottom:22px;}
+.card.orange{border-color:rgba(255,124,0,.22);}
+.card.mag{border-color:rgba(255,0,136,.2);}
+.card.grn{border-color:rgba(0,255,179,.15);}
+.card.yel{border-color:rgba(255,214,0,.18);}
+.card-ttl{font-family:'Exo 2',sans-serif;font-size:15px;font-weight:700;color:var(--cyan);margin-bottom:18px;display:flex;align-items:center;gap:9px;}
+.card-ttl.org{color:var(--orange);}.card-ttl.mag{color:var(--magenta);}.card-ttl.grn{color:var(--green);}.card-ttl.yel{color:var(--yellow);}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 7px var(--cyan);flex-shrink:0;}
+.dot.org{background:var(--orange);box-shadow:0 0 7px var(--orange);}
+.dot.mag{background:var(--magenta);box-shadow:0 0 7px var(--magenta);}
+.dot.grn{background:var(--green);box-shadow:0 0 7px var(--green);}
+.dot.yel{background:var(--yellow);box-shadow:0 0 7px var(--yellow);}
+/* Equation */
+.eq-box{background:var(--eq-bg);border:1px solid rgba(255,214,0,.18);border-radius:11px;padding:16px;margin-bottom:18px;text-align:center;font-family:'Space Mono',monospace;font-size:clamp(10px,2.3vw,13px);color:var(--yellow);line-height:1.8;overflow-x:auto;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;}
+.eq-box.org{border-color:rgba(255,124,0,.22);color:var(--orange);}
+.eq-box.grn{border-color:rgba(0,255,179,.18);color:var(--green);}
+.eq-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.3;}
+.eq-num{border-bottom:1.5px solid var(--yellow);padding:1px 6px 3px;}
+.eq-num.org{border-color:var(--orange);}.eq-num.grn{border-color:var(--green);}
+/* Strategy buttons */
+.strat-row{display:flex;gap:8px;margin-bottom:20px;}
+.strat-btn{flex:1;padding:13px 10px;border-radius:11px;cursor:pointer;transition:all .28s;text-align:center;border:2px solid var(--in-br);background:var(--in-bg);}
+.strat-btn:hover{border-color:var(--orange);}
+.strat-btn.active.mdd{border-color:var(--cyan);background:rgba(0,229,255,.07);}
+.strat-btn.active.eid{border-color:var(--orange);background:rgba(255,124,0,.07);}
+.strat-btn-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.strat-btn-tag.mdd{color:var(--cyan);}.strat-btn-tag.eid{color:var(--orange);}
+.strat-btn-name{font-family:'Exo 2',sans-serif;font-size:13px;font-weight:600;color:var(--text);}
+.strat-btn-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px;}
+/* Inputs */
+.in-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:18px;}
+.in-grp{display:flex;flex-direction:column;gap:5px;}
+.in-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.8px;color:var(--label-text);text-transform:uppercase;}
+.in-field{background:var(--in-bg);border:1px solid var(--in-br);border-radius:8px;padding:10px 13px;color:var(--input-text);font-family:'Space Mono',monospace;font-size:14px;transition:all .28s;width:100%;-webkit-appearance:none;}
+.in-field:focus{outline:none;border-color:var(--orange);box-shadow:0 0 13px rgba(255,124,0,.18);}
+.in-field::placeholder{color:var(--label-text);opacity:.55;}
+.in-field.org:focus{border-color:var(--orange);}.in-field.mag:focus{border-color:var(--magenta);}.in-field.cyn:focus{border-color:var(--cyan);}
+.in-field.yel:focus{border-color:var(--yellow);}
+/* Calc button */
+.calc-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--orange),rgba(255,160,0,.7));border:none;border-radius:10px;font-family:'Exo 2',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#000;cursor:pointer;transition:all .3s;margin-top:8px;}
+.calc-btn:hover{box-shadow:var(--gorange);transform:translateY(-1px);}
+.calc-btn.blue{background:linear-gradient(135deg,var(--cyan),rgba(0,200,230,.7));}
+/* Result boxes */
+.res-box{background:rgba(255,124,0,.04);border:1px solid rgba(255,124,0,.18);border-radius:12px;padding:18px;margin-top:18px;display:none;}
+.res-box.show{display:block;animation:floatIn .4s ease;}
+.res-box.cyan{background:rgba(0,229,255,.04);border-color:rgba(0,229,255,.18);}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,124,0,.08);}
+.res-row.cyan{border-bottom-color:rgba(0,229,255,.08);}
+.res-row:last-child{border-bottom:none;}
+.res-lbl{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+.res-val{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:var(--orange);filter:drop-shadow(0 0 5px rgba(255,124,0,.4));}
+.res-val.cyan{color:var(--cyan);filter:drop-shadow(0 0 5px rgba(0,229,255,.4));}
+/* ke display */
+.ke-disp{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.18);border-radius:10px;padding:14px 16px;display:none;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;flex-wrap:wrap;}
+.ke-disp.show{display:flex;}
+.ke-lbl{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+.ke-val{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--cyan);}
+.ke-disp.org{border-color:rgba(255,124,0,.2);}.ke-disp.org .ke-val{color:var(--orange);filter:drop-shadow(0 0 5px rgba(255,124,0,.4));}
+/* RR grid */
+.rr-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+.rr-box{border-radius:12px;padding:18px;text-align:center;}
+.rr-box.org{background:rgba(255,124,0,.05);border:1px solid rgba(255,124,0,.2);}
+.rr-box.mag{background:rgba(255,0,136,.05);border:1px solid rgba(255,0,136,.2);}
+.rr-box.cyan{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.2);}
+.rr-box.grn{background:rgba(0,255,179,.05);border:1px solid rgba(0,255,179,.2);}
+.rr-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.5px;margin-bottom:8px;}
+.rr-val{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;}
+.rr-val.org{color:var(--orange);}
+.rr-val.mag{color:var(--magenta);}
+.rr-val.cyan{color:var(--cyan);}
+.rr-val.grn{color:var(--green);}
+.rr-unit{font-size:11px;color:var(--muted);margin-top:3px;}
+.rr-status{font-family:'Space Mono',monospace;font-size:9px;margin-top:5px;letter-spacing:.5px;}
+/* Prev summary */
+.prev-sum{background:rgba(255,124,0,.04);border:1px solid rgba(255,124,0,.14);border-radius:9px;padding:13px 16px;margin-bottom:14px;display:flex;gap:16px;flex-wrap:wrap;}
+.prev-item{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+.prev-item span{color:var(--orange);}
+/* AUC */
+.auc-res{background:rgba(0,255,179,.05);border:1px solid rgba(0,255,179,.18);border-radius:12px;padding:20px;margin-top:16px;display:none;}
+.auc-res.show{display:block;animation:floatIn .35s ease;}
+.auc-lbl{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px;}
+.auc-val{font-family:'Space Mono',monospace;font-size:30px;font-weight:700;color:var(--green);filter:drop-shadow(0 0 7px rgba(0,255,179,.4));}
+.auc-unit{font-size:12px;color:var(--muted);margin-top:4px;}
+/* Status */
+.status-ok{color:var(--green);}.status-lo{color:var(--magenta);}.status-hi{color:var(--yellow);}
+/* Graph */
+.graph-wrap{margin-top:18px;background:var(--graph-bg);border-radius:12px;padding:14px;border:1px solid var(--border);display:none;cursor:zoom-in;position:relative;}
+.graph-wrap::after{content:'\2922  Tap to enlarge';position:absolute;bottom:22px;right:20px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);opacity:.55;pointer-events:none;letter-spacing:.5px;}
+.graph-lbl{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;}
+/* Single sample mode */
+.ss-mode-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.ss-mode-btn{padding:12px 8px;border-radius:10px;cursor:pointer;transition:all .28s;background:var(--in-bg);border:2px solid var(--in-br);font-family:'Exo 2',sans-serif;font-size:12px;font-weight:600;color:var(--muted);text-align:center;}
+.ss-mode-btn.active{border-color:var(--orange);background:rgba(255,124,0,.08);color:var(--orange);}
+/* PK model grid */
+.pk-model-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.pk-model-card{background:var(--in-bg);border:1px solid var(--in-br);border-radius:12px;padding:14px;cursor:pointer;transition:all .28s;text-align:left;}
+.pk-model-card:hover{border-color:var(--orange);}
+.pk-model-card.selected{border-color:var(--orange);background:rgba(255,124,0,.08);box-shadow:var(--gorange);}
+.pk-model-tag{font-family:'Space Mono',monospace;font-size:9px;color:var(--orange);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase;}
+.pk-model-name{font-family:'Exo 2',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.pk-model-eq{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);line-height:1.6;}
+/* PK chips */
+.pk-chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.pk-chip{background:rgba(255,124,0,.05);border:1px solid rgba(255,124,0,.2);border-radius:8px;padding:10px 16px;min-width:90px;text-align:center;}
+.pk-chip-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.pk-chip-val{font-family:'Space Mono',monospace;font-size:15px;color:var(--orange);font-weight:700;}
+.pk-chip-unit{font-family:'Space Mono',monospace;font-size:9px;color:var(--dim);margin-top:2px;}
+/* Sex toggle */
+.sex-toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--in-br);}
+.sex-btn{flex:1;padding:10px;background:var(--in-bg);border:none;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer;transition:all .25s;letter-spacing:.5px;}
+.sex-btn.active{background:rgba(255,0,136,.1);color:var(--magenta);}
+/* Dose pills */
+.dose-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.dose-pill{padding:8px 14px;background:var(--in-bg);border:1px solid var(--in-br);border-radius:20px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);cursor:pointer;transition:all .25s;}
+.dose-pill:hover{border-color:var(--orange);}
+.dose-pill.suggested{border-color:rgba(255,124,0,.5);color:rgba(255,124,0,.85);}
+.dose-pill.selected{border-color:var(--orange);background:rgba(255,124,0,.1);color:var(--orange);}
+/* MD table */
+.md-hdr{display:grid;grid-template-columns:0.7fr 0.9fr 0.6fr 0.75fr 0.75fr 1fr;gap:6px;padding:6px 12px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+.md-table{display:flex;flex-direction:column;gap:5px;}
+.md-row{display:grid;grid-template-columns:0.7fr 0.9fr 0.6fr 0.75fr 0.75fr 1fr;gap:6px;padding:10px 12px;border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;align-items:center;background:var(--in-bg);border:1px solid var(--in-br);cursor:pointer;transition:all .25s;}
+.md-row:hover{border-color:var(--orange);}
+.md-row.md-sel{border-color:var(--orange);background:rgba(255,124,0,.07);}
+/* Section label */
+.sec-lbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+/* Radio */
+.radio-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.radio-opt{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--in-bg);border:1px solid var(--in-br);border-radius:8px;cursor:pointer;transition:all .28s;flex:1;min-width:150px;}
+.radio-opt.active{border-color:var(--orange);background:rgba(255,124,0,.06);}
+.radio-lbl{font-family:'Exo 2',sans-serif;font-size:13px;color:var(--text);}
+/* Info note */
+.info-note{background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.1);border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px;}
+.info-note.warn{border-color:rgba(255,214,0,.25);background:rgba(255,214,0,.05);color:var(--yellow);}
+.info-note.err{border-color:rgba(255,80,80,.3);background:rgba(255,50,50,.08);color:#ff6666;}
+/* Error */
+.err-msg{background:rgba(255,50,50,.08);border:1px solid rgba(255,80,80,.3);border-radius:8px;padding:11px 14px;margin-top:12px;font-family:'Space Mono',monospace;font-size:12px;color:#ff6666;display:none;}
+.err-msg.show{display:block;}
+/* Footer */
+footer{position:fixed;bottom:0;width:100%;text-align:center;padding:8px 16px 6px;background:var(--footer-bg);backdrop-filter:blur(12px);border-top:1px solid var(--footer-bdr);z-index:200;}
+.ft-name{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.8px;color:var(--muted);}
+.ft-org{font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--dim);margin-top:2px;line-height:1.4;}
+/* Animations */
+@keyframes floatIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@media(max-width:600px){
+  .rr-grid{grid-template-columns:1fr;}
+  .pk-model-grid{grid-template-columns:1fr 1fr;}
+  .ss-mode-row{grid-template-columns:1fr;}
+  .in-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:380px){
+  .in-grid{grid-template-columns:1fr;}
+  .pk-model-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<button id="theme-toggle" onclick="toggleTheme()"><span id="tt-icon">☀️</span><span class="tt-lbl" id="tt-lbl">LIGHT</span></button>
+<div id="graph-lightbox" onclick="closeLightbox()">
+  <button id="lb-close" onclick="closeLightbox()">✕</button>
+  <div id="lb-canvas-wrap" onclick="event.stopPropagation()"><div id="lb-title">GRAPH</div><canvas id="lb-canvas"></canvas></div>
+</div>
+
+<div id="page-amk">
+  <div class="page-hdr">
+    <button class="btn-sm-back" onclick="goBack()">← Back</button>
+    <div class="page-ttl">Gentamicin PK</div>
+  </div>
+  <div class="page-sub">AMINOGLYCOSIDE · CONCENTRATION-DEPENDENT BACTERICIDAL</div>
+
+  <div class="target-bar">
+    <div class="tgt-chip mdd" id="tgt-mdd-chip">💉 MDD · Peak 4–10 · Trough &lt;2 mg/L</div>
+    <div class="tgt-chip eid">⚡ EID (Hartford) · Peak 8–12 · Trough &lt;1 mg/L</div>
+    <div class="tgt-chip pk">📐 Peak/MIC ≥ 8–10</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-pt" onclick="switchTab('pt')">🩸 Peak–Trough</button>
+    <button class="tab" id="tab-btn-ss" onclick="switchTab('ss')">💉 Single Sample</button>
+    <button class="tab" id="tab-btn-id" onclick="switchTab('id')">💊 Initial Dose</button>
+  </div>
+
+  <!-- ══════════ TAB 1: PEAK–TROUGH ══════════ -->
+  <div id="tc-pt" class="tab-content active">
+
+    <!-- Dosing Strategy + MIC-based peak -->
+    <div class="card">
+      <div class="card-ttl org"><div class="dot org"></div>Dosing Strategy &amp; Peak Target</div>
+      <div class="strat-row">
+        <div class="strat-btn mdd active" id="strat-mdd" onclick="onStrat('mdd')">
+          <div class="strat-btn-tag mdd">Traditional MDD</div>
+          <div class="strat-btn-name">Conventional Dosing</div>
+          <div class="strat-btn-sub" id="strat-mdd-sub">Peak 4–10 · Trough &lt;2 mg/L</div>
+        </div>
+        <div class="strat-btn eid" id="strat-eid" onclick="onStrat('eid')">
+          <div class="strat-btn-tag eid">Extended Interval</div>
+          <div class="strat-btn-name">EID / Hartford</div>
+          <div class="strat-btn-sub">Peak 8–12 · Trough &lt;1 mg/L</div>
+        </div>
+      </div>
+      <!-- MIC-based peak selector (MDD) -->
+      <div id="mdd-mic-section" style="padding-top:14px;border-top:1px solid var(--border);">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;">Peak Target (MDD)</div>
+        <div class="in-grid" style="margin-bottom:12px;">
+          <div class="in-grp" style="max-width:200px;">
+            <label class="in-label">MIC (mg/L) <span style="color:var(--dim);font-size:9px;">optional</span></label>
+            <input class="in-field" type="number" id="strat-mic" placeholder="e.g. 1" step="0.001" oninput="onStratMIC()">
+          </div>
+        </div>
+        <div id="mic-target-row" style="display:none;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <div class="dose-pill selected" id="tgt-8-10" onclick="onTargetPick('8-10')">8–10 × MIC</div>
+            <div class="dose-pill" id="tgt-10-12" onclick="onTargetPick('10-12')">10–12 × MIC</div>
+            <div class="dose-pill" id="tgt-custom" onclick="onTargetPick('custom')">n × MIC</div>
+            <div class="dose-pill" id="tgt-usual" onclick="onTargetPick('usual')">Usual (20–30)</div>
+          </div>
+          <div id="custom-n-wrap" style="display:none;max-width:200px;margin-bottom:10px;">
+            <label class="in-label">n (peak = n × MIC)</label>
+            <input class="in-field" type="number" id="strat-n" placeholder="e.g. 9" step="0.5" min="1" oninput="onStratMIC()">
+          </div>
+          <div id="peak-target-display" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--cyan);"></div>
+        </div>
+        <div id="no-mic-msg" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--dim);">Using usual peak range (4–10 mg/L). Enter MIC for MIC-based target.</div>
+      </div>
+    </div>
+
+    <!-- Step ①: ke -->
+    <div class="card">
+      <div class="card-ttl"><div class="dot"></div>① k<sub>e</sub> — Sawchuk-Zaske</div>
+      <div class="eq-box">k<sub>e</sub> = <span class="eq-frac"><span class="eq-num">ln C<sub>peak</sub> − ln C<sub>trough</sub></span><span class="eq-den">T<sub>between</sub></span></span></div>
+      <div class="in-grid">
+        <div class="in-grp"><label class="in-label">C<sub>peak</sub> (mg/L)</label><input class="in-field" type="number" id="pt-cpeak" placeholder="e.g. 28" oninput="calcPTke()" onchange="calcPTke()"></div>
+        <div class="in-grp"><label class="in-label">C<sub>trough</sub> (mg/L)</label><input class="in-field" type="number" id="pt-ctrough" placeholder="e.g. 3" oninput="calcPTke()" onchange="calcPTke()"></div>
+        <div class="in-grp"><label class="in-label">T<sub>between</sub> — peak to trough draw (hr)</label><input class="in-field" type="number" id="pt-tbetw" placeholder="e.g. 8" oninput="calcPTke()" onchange="calcPTke()"></div>
+      </div>
+      <div class="ke-disp" id="pt-ke-disp"><span class="ke-lbl">k<sub>e</sub></span><span class="ke-val" id="pt-ke-val">—</span></div>
+      <div class="ke-disp" id="pt-t12-disp" style="margin-top:8px;"><span class="ke-lbl">t<sub>½</sub></span><span class="ke-val" id="pt-t12-val">—</span></div>
+    </div>
+
+    <!-- Step ②: Vd (corrected Sawchuk-Zaske with Cmin extrapolation) -->
+    <div class="card orange" id="pt-vd-card" style="display:none;">
+      <div class="card-ttl org"><div class="dot org"></div>② V<sub>d</sub> — Sawchuk-Zaske</div>
+      <div class="eq-box org" style="flex-direction:column;gap:8px;">
+        <div>V<sub>d</sub> = <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num org">D·(1−e<sup>−k<sub>e</sub>t'</sup>)</span><span class="eq-den">k<sub>e</sub>·t'·(C<sub>max</sub>−C<sub>min</sub>·e<sup>−k<sub>e</sub>t'</sup>)</span></span></div>
+        <div style="font-size:9px;color:rgba(255,124,0,.6);">C<sub>max</sub>=C<sub>peak</sub>·e<sup>k<sub>e</sub>t*</sup> &nbsp;|&nbsp; C<sub>min</sub>=C<sub>trough</sub>·e<sup>−k<sub>e</sub>t''</sup> &nbsp;|&nbsp; t*=end infusion→peak &nbsp;|&nbsp; t''=trough→next dose</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:16px;padding:10px 14px;background:var(--in-bg);border:1px solid var(--in-br);border-radius:8px;user-select:none;">
+        <input type="checkbox" id="pt-skip-extrap" onchange="calcPTVd()" style="accent-color:var(--orange);width:16px;height:16px;">
+        <span style="font-family:'Exo 2',sans-serif;font-size:13px;color:var(--text);">Skip extrapolation — use C<sub>peak</sub>/C<sub>trough</sub> directly</span>
+      </label>
+      <div class="prev-sum">
+        <span class="prev-item">C<sub>peak</sub>: <span id="pt-vd-ps-cpeak">—</span></span>
+        <span class="prev-item">C<sub>trough</sub>: <span id="pt-vd-ps-ctrough">—</span></span>
+        <span class="prev-item">k<sub>e</sub>: <span id="pt-vd-ps-ke">—</span></span>
+        <span class="prev-item" id="pt-cmax-echo-wrap" style="display:none;">C<sub>max</sub>: <span id="pt-cmax-echo" style="color:var(--orange);">—</span></span>
+        <span class="prev-item" id="pt-cmin-echo-wrap" style="display:none;">C<sub>min</sub>: <span id="pt-cmin-echo" style="color:var(--orange);">—</span></span>
+      </div>
+      <div id="pt-extrap-inputs">
+        <div class="in-grid">
+          <div class="in-grp"><label class="in-label">t* — end infusion → peak draw (hr)</label><input class="in-field org" type="number" id="pt-tstar" placeholder="e.g. 0.5" step="0.1" oninput="calcPTVd()" onchange="calcPTVd()"></div>
+          <div class="in-grp"><label class="in-label">t'' — trough draw → next dose (hr)</label><input class="in-field org" type="number" id="pt-tpp" placeholder="e.g. 0.5" step="0.1" oninput="calcPTVd()" onchange="calcPTVd()"></div>
+        </div>
+      </div>
+      <div class="in-grid">
+        <div class="in-grp"><label class="in-label">Dose — D (mg)</label><input class="in-field org" type="number" id="pt-dose" placeholder="e.g. 750" oninput="calcPTVd()" onchange="calcPTVd()"></div>
+        <div class="in-grp"><label class="in-label">Infusion Time — t' (hr)</label><input class="in-field org" type="number" id="pt-tp" placeholder="e.g. 0.5" step="0.25" oninput="calcPTVd()" onchange="calcPTVd()"></div>
+        <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field org" type="number" id="pt-tau" placeholder="e.g. 24" oninput="calcPTVd()" onchange="calcPTVd()"></div>
+      </div>
+      <div class="ke-disp org" id="pt-vd-res-disp"><span class="ke-lbl">V<sub>d</sub></span><span class="ke-val" style="color:var(--orange);" id="pt-vd-res-val">—</span></div>
+
+      <!-- Solve button -->
+      <button class="calc-btn blue" style="margin-top:14px;" onclick="calcPTSolve()">🔬 Solve — Show k<sub>e</sub>, t<sub>½</sub>, V<sub>d</sub>, C<sub>max</sub> SS, C<sub>min</sub> SS</button>
+
+      <div class="res-box cyan" id="pt-solve-box">
+        <div class="res-row cyan"><span class="res-lbl">k<sub>e</sub></span><span class="res-val cyan" id="pts-ke">—</span></div>
+        <div class="res-row cyan"><span class="res-lbl">t<sub>½</sub></span><span class="res-val cyan" id="pts-t12">—</span></div>
+        <div class="res-row cyan"><span class="res-lbl">V<sub>d</sub></span><span class="res-val cyan" id="pts-vd">—</span></div>
+        <div class="res-row cyan" style="border-top:1px solid rgba(0,229,255,.12);padding-top:10px;margin-top:4px;">
+          <span class="res-lbl">C<sub>max</sub> SS</span>
+          <div style="text-align:right;"><span class="res-val cyan" id="pts-cmax">—</span><div style="font-family:'Space Mono',monospace;font-size:10px;margin-top:3px;" id="pts-cmax-status"></div></div>
+        </div>
+        <div class="res-row cyan">
+          <span class="res-lbl">C<sub>min</sub> SS (trough)</span>
+          <div style="text-align:right;"><span class="res-val cyan" id="pts-cmin">—</span><div style="font-family:'Space Mono',monospace;font-size:10px;margin-top:3px;" id="pts-cmin-status"></div></div>
+        </div>
+      </div>
+      <div class="graph-wrap" id="pts-graph-wrap"><div class="graph-lbl">PATIENT PK — STEADY STATE PROFILE</div><canvas id="pts-canvas"></canvas></div>
+    </div>
+
+    <!-- AUC — 3 methods -->
+    <div class="card grn" id="pt-auc-card" style="display:none;">
+      <div class="card-ttl grn"><div class="dot grn"></div>④ AUC Calculation</div>
+      <div class="method-toggle">
+        <div class="mth-btn active" id="pt-mth-trad" onclick="onPTAucMethod('trad')">Traditional</div>
+        <div class="mth-btn" id="pt-mth-intg" onclick="onPTAucMethod('intg')">Integral</div>
+        <div class="mth-btn" id="pt-mth-mbal" onclick="onPTAucMethod('mbal')">Mass Balance</div>
+      </div>
+      <div id="pt-trad-wrap">
+        <div class="eq-box grn" style="font-size:11px;flex-direction:column;gap:6px;"><div>AUC = <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num grn">C<sub>max</sub>−C<sub>min</sub></span><span class="eq-den">k<sub>e</sub></span></span> × <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num grn">24</span><span class="eq-den">τ</span></span></div><div style="font-size:9px;color:rgba(0,255,179,.55);">SS Cmax and Cmin from Solve · Bolus-like approximation</div></div>
+        <div class="in-grid"><div class="in-grp"><label class="in-label">MIC (mg/L) <span style="color:var(--dim);font-size:9px;">OPT</span></label><input class="in-field" type="number" id="pt-trad-mic" placeholder="e.g. 2" step="0.001" oninput="calcPTAucTrad()"></div></div>
+      </div>
+      <div id="pt-intg-wrap" style="display:none;">
+        <div class="eq-box grn" style="font-size:11px;flex-direction:column;gap:6px;"><div>AUC = <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num grn">24</span><span class="eq-den">τ</span></span> · ∫<sub>0</sub><sup>τ</sup> C<sub>n</sub>(t)dt</div><div id="pt-intg-eq-label" style="font-size:9px;color:rgba(0,255,179,.55);">Steady State</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <div class="dose-pill pill-sel" id="pt-intg-ss-btn" onclick="onPTIntgState('ss')" style="border-color:rgba(0,255,179,.4);color:var(--green);">Steady State</div>
+          <div class="dose-pill" id="pt-intg-nd-btn" onclick="onPTIntgState('ndose')">After N Doses</div>
+        </div>
+        <div id="pt-intg-ndose-wrap" style="display:none;">
+          <div class="in-grid" style="margin-bottom:8px;"><div class="in-grp"><label class="in-label">Number of doses — N</label><input class="in-field" type="number" id="pt-intg-ndose" placeholder="e.g. 3" min="1" step="1" oninput="calcPTAucIntg()"></div></div>
+          <div class="info-note" style="border-color:rgba(0,255,179,.15);background:rgba(0,255,179,.03);font-size:11px;margin-bottom:8px;">AF = (1−e<sup>−N·k<sub>e</sub>·τ</sup>) / (1−e<sup>−k<sub>e</sub>·τ</sup>)</div>
+        </div>
+        <div class="in-grid"><div class="in-grp"><label class="in-label">MIC (mg/L) <span style="color:var(--dim);font-size:9px;">OPT</span></label><input class="in-field" type="number" id="pt-intg-mic" placeholder="e.g. 2" step="0.001" oninput="calcPTAucIntg()"></div></div>
+      </div>
+      <div id="pt-mbal-wrap" style="display:none;">
+        <div class="eq-box grn" style="font-size:11px;flex-direction:column;gap:6px;"><div>AUC = <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num grn">D</span><span class="eq-den">k<sub>e</sub>·V<sub>d</sub></span></span> × <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num grn">24</span><span class="eq-den">τ</span></span></div><div style="font-size:9px;color:rgba(0,255,179,.55);">Exact SS mass balance · Independent of infusion shape</div></div>
+        <div class="in-grid"><div class="in-grp"><label class="in-label">MIC (mg/L) <span style="color:var(--dim);font-size:9px;">OPT</span></label><input class="in-field" type="number" id="pt-mbal-mic" placeholder="e.g. 2" step="0.001" oninput="calcPTAucMbal()"></div></div>
+      </div>
+      <div class="auc-res" id="pt-auc-box"><div class="auc-lbl" id="pt-auc-lbl">AUC<sub>0–24h</sub></div><div class="auc-val" id="pt-auc-val" style="color:var(--green);">—</div><div class="auc-unit">mg · hr / L</div></div>
+      <div class="auc-res" id="pt-aucmic-box" style="border-color:rgba(157,79,255,.3);background:rgba(157,79,255,.05);"><div class="auc-lbl" style="color:var(--purple);">AUC / MIC</div><div class="auc-val" id="pt-aucmic-val" style="color:var(--purple);">—</div><div class="auc-unit">hr</div></div>
+    </div>
+
+    <!-- ④ Regimen Design — always visible -->
+    <div class="card mag" id="pt-reg-card">
+      <div class="card-ttl mag"><div class="dot mag"></div>④ Regimen Design — Steady State</div>
+      <div class="in-grid">
+        <div class="in-grp"><label class="in-label">New Dose (mg)</label><input class="in-field mag" type="number" id="pt-nd" placeholder="e.g. 750" oninput="calcPTRegimen()" onchange="calcPTRegimen()"></div>
+        <div class="in-grp"><label class="in-label">t' (hr)</label><input class="in-field mag" type="number" id="pt-ntp" placeholder="e.g. 0.5" value="0.5" step="0.25" oninput="calcPTRegimen()" onchange="calcPTRegimen()"></div>
+        <div class="in-grp"><label class="in-label">τ (hr)</label><input class="in-field mag" type="number" id="pt-ntau" placeholder="e.g. 24" oninput="calcPTRegimen()" onchange="calcPTRegimen()"></div>
+        <div class="in-grp"><label class="in-label">k<sub>e</sub> (hr⁻¹) <span style="font-size:9px;color:var(--dim);">EDITABLE</span></label><input class="in-field mag" type="number" id="pt-nke" placeholder="from Step ①" step="0.0001" oninput="calcPTRegimen()" onchange="calcPTRegimen()"></div>
+        <div class="in-grp"><label class="in-label">V<sub>d</sub> (L) <span style="font-size:9px;color:var(--dim);">EDITABLE</span></label><input class="in-field mag" type="number" id="pt-nvd" placeholder="from Step ②" oninput="calcPTRegimen()" onchange="calcPTRegimen()"></div>
+        <div class="in-grp"><label class="in-label">MIC (mg/L) <span style="font-size:9px;color:var(--dim);">OPT</span></label><input class="in-field mag" type="number" id="pt-mic" placeholder="e.g. 2" step="0.001" oninput="calcPTRegimen()" onchange="calcPTRegimen()"></div>
+      </div>
+      <div class="rr-grid" id="pt-reg-results" style="display:none;">
+        <div class="rr-box cyan"><div class="rr-lbl">C<sub>max</sub> SS</div><div class="rr-val cyan" id="pt-res-cmax">—</div><div class="rr-unit">mg/L</div><div class="rr-status" id="pt-res-cmax-status"></div></div>
+        <div class="rr-box mag"><div class="rr-lbl">C<sub>trough</sub> SS</div><div class="rr-val mag" id="pt-res-ctrough">—</div><div class="rr-unit">mg/L</div><div class="rr-status" id="pt-res-ctrough-status"></div></div>
+        <div class="rr-box org"><div class="rr-lbl">C<sub>max</sub>/MIC</div><div class="rr-val org" id="pt-res-cmic">—</div><div class="rr-unit">target ≥8–10</div><div class="rr-status" id="pt-res-cmic-status"></div></div>
+        <div class="rr-box grn"><div class="rr-lbl">t<sub>½</sub></div><div class="rr-val grn" id="pt-res-t12">—</div><div class="rr-unit">hr</div></div>
+      </div>
+      <div class="graph-wrap" id="pt-graph-wrap"><div class="graph-lbl">REGIMEN — STEADY STATE C–T PROFILE</div><canvas id="pt-canvas"></canvas></div>
+    </div>
+  </div><!-- end tc-pt -->
+
+  <!-- ══════════ TAB 2: SINGLE SAMPLE ══════════ -->
+  <div id="tc-ss" class="tab-content">
+    <div class="card">
+      <div class="card-ttl org"><div class="dot org"></div>Mode</div>
+      <div class="ss-mode-row">
+        <div class="ss-mode-btn active" id="ssm-trough" onclick="onSSMode('trough')">🔵 Single Trough</div>
+        <div class="ss-mode-btn" id="ssm-peak" onclick="onSSMode('peak')">🔴 Single Peak</div>
+        <div class="ss-mode-btn" id="ssm-hartford" onclick="onSSMode('hartford')">📊 Hartford Nomogram</div>
+      </div>
+      <div id="ssm-desc" style="font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;"></div>
+    </div>
+
+    <!-- Single Trough -->
+    <div id="ss-trough-wrap">
+      <!-- ① Vd estimation (Dettli population PK) -->
+      <div class="card">
+        <div class="card-ttl org"><div class="dot org"></div>① V<sub>d</sub> Estimation — Dettli Population PK</div>
+        <div class="in-grid" style="margin-bottom:12px;">
+          <div class="in-grp"><label class="in-label">CrCl (mL/min)</label><input class="in-field org" type="number" id="sst-crcl" placeholder="e.g. 60" oninput="calcSSTVd()" onchange="calcSSTVd()"></div>
+          <div class="in-grp"><label class="in-label">Dosing Weight (kg)</label><input class="in-field org" type="number" id="sst-dwt" placeholder="e.g. 55" oninput="calcSSTVd()" onchange="calcSSTVd()"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+          <div class="pk-model-card" data-sst-mdl="std" onclick="selectSSTModel('std')"><div class="pk-model-tag">Standard</div><div class="pk-model-name">Normal habitus</div><div class="pk-model-eq">Vd=0.25·DosWt</div></div>
+          <div class="pk-model-card" data-sst-mdl="edema" onclick="selectSSTModel('edema')"><div class="pk-model-tag">Edema</div><div class="pk-model-name">Fluid overload</div><div class="pk-model-eq">Vd=0.30·DosWt</div></div>
+          <div class="pk-model-card" data-sst-mdl="lean" onclick="selectSSTModel('lean')"><div class="pk-model-tag">Lean/Thin</div><div class="pk-model-name">Underweight</div><div class="pk-model-eq">Vd=0.15·DosWt</div></div>
+        </div>
+        <div class="in-grid" style="margin-bottom:0;">
+          <div class="in-grp"><label class="in-label">V<sub>d</sub> (L) — editable override</label><input class="in-field org" type="number" id="sst-vd" placeholder="auto from model" step="0.1" oninput="calcSSTke()"></div>
+        </div>
+        <div class="ke-disp org" id="sst-vd-disp"><span class="ke-lbl">V<sub>d</sub> (Dettli)</span><span class="ke-val" style="color:var(--orange);" id="sst-vd-val">—</span></div>
+      </div>
+
+      <!-- ② ke method selector -->
+      <div class="card">
+        <div class="card-ttl"><div class="dot"></div>② Solve for k<sub>e</sub></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div id="sst-km-exact" onclick="onSSTMethod('exact')"
+               style="border:2px solid var(--cyan);border-radius:13px;padding:14px 12px;cursor:pointer;background:rgba(0,229,255,.06);position:relative;transition:all .28s;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--cyan);letter-spacing:1px;margin-bottom:5px;">📐 EXACT ANALYTIC</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Multiple Intermittent IV</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);line-height:1.5;">Bisection solve<br>D, t', τ, N, t, Ct</div>
+            <div id="sst-km-exact-check" style="position:absolute;top:10px;right:12px;color:var(--cyan);font-size:16px;">✓</div>
+          </div>
+          <div id="sst-km-proxy" onclick="onSSTMethod('proxy')"
+               style="border:2px solid var(--in-br);border-radius:13px;padding:14px 12px;cursor:pointer;background:var(--in-bg);position:relative;transition:all .28s;">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--yellow);letter-spacing:1px;margin-bottom:5px;">⚡ BOLUS PROXY</div>
+            <div style="font-family:'Exo 2',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Single-Level SS Trough</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);line-height:1.5;">Direct closed-form<br>D, τ, Vd, Ct (SS trough)</div>
+            <div id="sst-km-proxy-check" style="position:absolute;top:10px;right:12px;color:var(--yellow);font-size:16px;display:none;">✓</div>
+          </div>
+        </div>
+
+        <!-- Exact Analytic inputs -->
+        <div id="sst-exact-wrap">
+          <div class="eq-box" style="font-size:11px;">C<sub>t</sub> = <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num">D·(1−e<sup>−k<sub>e</sub>t'</sup>)</span><span class="eq-den">k<sub>e</sub>·V<sub>d</sub>·t'·(1−e<sup>−k<sub>e</sub>τ</sup>)</span></span> · e<sup>−k<sub>e</sub>·t</sup></div>
+          <div class="in-grid">
+            <div class="in-grp"><label class="in-label">Dose — D (mg)</label><input class="in-field cyn" type="number" id="sst-dose" placeholder="e.g. 750" oninput="livePreviewSST()"></div>
+            <div class="in-grp"><label class="in-label">Infusion Time — t' (hr)</label><input class="in-field cyn" type="number" id="sst-tp" placeholder="e.g. 0.5" step="0.25" oninput="livePreviewSST()"></div>
+            <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field cyn" type="number" id="sst-tau" placeholder="e.g. 24" oninput="livePreviewSST()"></div>
+            <div class="in-grp"><label class="in-label">Number of doses — N</label><input class="in-field cyn" type="number" id="sst-n" placeholder="e.g. 4" min="1" oninput="livePreviewSST()"></div>
+            <div class="in-grp"><label class="in-label">Time after infusion — t (hr)</label><input class="in-field cyn" type="number" id="sst-t" placeholder="e.g. 0.5" step="0.25" oninput="livePreviewSST()"></div>
+            <div class="in-grp"><label class="in-label">Measured C<sub>t</sub> (mg/L)</label><input class="in-field cyn" type="number" id="sst-ct-exact" placeholder="e.g. 3" oninput="livePreviewSST()"></div>
+          </div>
+        </div>
+
+        <!-- Bolus Proxy inputs -->
+        <div id="sst-proxy-wrap" style="display:none;">
+          <div class="eq-box" style="flex-direction:column;gap:6px;border-color:rgba(255,214,0,.2);color:var(--yellow);">
+            <div>k<sub>e</sub> = <span class="eq-frac" style="display:inline-flex;vertical-align:middle;"><span class="eq-num" style="border-color:var(--yellow);">ln(C<sub>t</sub> + D/V<sub>d</sub>) − ln(C<sub>t</sub>)</span><span class="eq-den">τ</span></span></div>
+            <div style="font-size:9px;color:rgba(255,214,0,.55);">C<sub>t</sub> = measured SS trough</div>
+          </div>
+          <div class="in-grid">
+            <div class="in-grp"><label class="in-label">Dose — D (mg)</label><input class="in-field cyn" type="number" id="sst-dose-p" placeholder="e.g. 750" oninput="livePreviewSST()"></div>
+            <div class="in-grp"><label class="in-label">Dosing Interval — τ (hr)</label><input class="in-field cyn" type="number" id="sst-tau-p" placeholder="e.g. 24" oninput="livePreviewSST()"></div>
+            <div class="in-grp"><label class="in-label">Measured SS Trough — C<sub>t</sub> (mg/L)</label><input class="in-field cyn" type="number" id="sst-ct-proxy" placeholder="e.g. 3" oninput="livePreviewSST()"></div>
+          </div>
+          <div id="sst-proxy-preview" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);padding:6px 10px;border:1px solid rgba(0,229,255,.12);border-radius:6px;background:rgba(0,229,255,.03);"></div>
+        </div>
+
+        <div class="err-msg" id="ss-err"></div>
+        <button class="calc-btn blue" onclick="calcSSTSolve()" style="margin-top:12px;">🔬 Solve for k<sub>e</sub></button>
+
+        <div class="res-box cyan" id="ss-res-box">
+          <div class="res-row cyan"><span class="res-lbl">k<sub>e</sub></span><span class="res-val cyan" id="ss-res-ke">—</span></div>
+          <div class="res-row cyan"><span class="res-lbl">t<sub>½</sub></span><span class="res-val cyan" id="ss-res-t12">—</span></div>
+          <div class="res-row cyan"><span class="res-lbl">V<sub>d</sub></span><span class="res-val cyan" id="ss-res-vd">—</span></div>
+          <div class="res-row cyan"><span class="res-lbl">C<sub>max</sub> SS</span><span class="res-val cyan" id="ss-res-cmax">—</span></div>
+          <div class="res-row cyan"><span class="res-lbl">C<sub>trough</sub> (measured)</span><span class="res-val cyan" id="ss-res-ctrough">—</span></div>
+          <div class="res-row cyan" style="border-top:1px solid rgba(0,229,255,.15);padding-top:8px;margin-top:4px;">
+            <span class="res-lbl">Trough Safety (<span id="ss-strat-tag">MDD</span>)</span>
+            <span style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;" id="ss-status">—</span>
+          </div>
+        </div>
+        <div class="graph-wrap" id="ss-graph-wrap"><div class="graph-lbl">SINGLE TROUGH — STEADY STATE PROFILE</div><canvas id="ss-canvas"></canvas></div>
+      </div>
+      <!-- Holding Time -->
+      <div class="card yel">
+        <div class="card-ttl yel"><div class="dot yel"></div>Holding Time Estimator</div>
+        <div class="eq-box" style="border-color:rgba(255,214,0,.22);color:var(--yellow);font-size:11px;">C(t) = C<sub>trough</sub> · e<sup>−k<sub>e</sub>·t</sup></div>
+        <div class="in-grid">
+          <div class="in-grp"><label class="in-label">k<sub>e</sub> (hr⁻¹)</label><input class="in-field yel" type="number" id="ht-ke" placeholder="auto-filled" step="0.001" oninput="calcHT()"></div>
+          <div class="in-grp"><label class="in-label">C<sub>trough</sub> measured (mg/L)</label><input class="in-field yel" type="number" id="ht-ct" placeholder="auto-filled" oninput="calcHT()"></div>
+          <div class="in-grp"><label class="in-label">Pass-by time — t<sub>pass</sub> (hr)</label><input class="in-field yel" type="number" id="ht-tpass" placeholder="e.g. 2" step="0.5" oninput="calcHT()"></div>
+        </div>
+        <div id="ht-res" style="display:none;background:rgba(255,214,0,.04);border:1px solid rgba(255,214,0,.2);border-radius:10px;padding:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);">C after <span id="ht-tpass-echo">—</span> hr</span>
+            <span style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;" id="ht-remain">—</span>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;" id="ht-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Single Peak -->
+    <div id="ss-peak-wrap" style="display:none;">
+      <div class="card">
+        <div class="card-ttl"><div class="dot"></div>Single Peak — Efficacy Check</div>
+        <div class="info-note">Measure peak 30–60 min after end of infusion. Confirms peak target is achieved. Extrapolates to true C<sub>max</sub> at end of infusion.</div>
+        <div class="in-grid">
+          <div class="in-grp"><label class="in-label">Measured C<sub>peak</sub> (mg/L)</label><input class="in-field org" type="number" id="sp-cpeak" placeholder="e.g. 28" oninput="calcSSP()" onchange="calcSSP()"></div>
+          <div class="in-grp"><label class="in-label">t* — end infusion → peak draw (hr)</label><input class="in-field org" type="number" id="sp-tstar" placeholder="e.g. 0.5" step="0.1" oninput="calcSSP()" onchange="calcSSP()"></div>
+          <div class="in-grp"><label class="in-label">k<sub>e</sub> (hr⁻¹) <span style="font-size:9px;color:var(--dim);">for extrapolation</span></label><input class="in-field org" type="number" id="sp-ke" placeholder="e.g. 0.120" step="0.001" oninput="calcSSP()" onchange="calcSSP()"></div>
+          <div class="in-grp"><label class="in-label">MIC (mg/L) <span style="font-size:9px;color:var(--dim);">OPT</span></label><input class="in-field" type="number" id="sp-mic" placeholder="e.g. 1" step="0.001" oninput="calcSSP()" onchange="calcSSP()"></div>
+        </div>
+        <div class="res-box" id="sp-res-box" style="border-color:rgba(255,124,0,.2);background:rgba(255,124,0,.03);">
+          <div class="res-row cyan"><span class="res-lbl">C<sub>max</sub> (extrapolated to end of infusion)</span><span class="res-val" style="color:var(--orange);" id="sp-cmax">—</span></div>
+          <div class="res-row cyan"><span class="res-lbl">C<sub>max</sub> / MIC</span><span class="res-val" style="color:var(--purple);" id="sp-cmic">—</span></div>
+          <div class="res-row cyan" style="border-top:1px solid rgba(255,124,0,.15);padding-top:8px;margin-top:4px;">
+            <span class="res-lbl">Peak Interpretation</span>
+            <span style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;" id="sp-status">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hartford Nomogram -->
+    <div id="ss-hartford-wrap" style="display:none;">
+      <div class="card">
+        <div class="card-ttl"><div class="dot"></div>Hartford Nomogram — EID Interval Selection</div>
+        <div class="info-note" style="border-color:rgba(255,124,0,.2);background:rgba(255,124,0,.04);">
+          For <strong>7 mg/kg gentamicin</strong> dose. Draw random level <strong>8–12 h</strong> after start of infusion. Plot level directly — no division needed.<br>
+          ⚠ Nomogram validated for 7 mg/kg only. Other doses may under/overestimate clearance.<br>
+          ⚠ Not applicable: CrCl&lt;30, ascites, pregnancy, burns &gt;20% BSA.
+        </div>
+        <div class="in-grid">
+          <div class="in-grp"><label class="in-label">Drug</label>
+            <select id="hf-drug" class="in-field" onchange="calcHartford()" style="color:var(--input-text);">
+              <option value="gent7">Gentamicin 7 mg/kg</option>
+              <option value="gent3">Gentamicin 3 mg/kg (synergy — see note)</option>
+            </select>
+          </div>
+          <div class="in-grp"><label class="in-label">Time after start of infusion (hr)</label><input class="in-field cyn" type="number" id="hf-time" placeholder="8–12 hr" step="0.5" min="6" max="14" oninput="calcHartford()" onchange="calcHartford()"></div>
+          <div class="in-grp"><label class="in-label">Measured Level (mg/L)</label><input class="in-field cyn" type="number" id="hf-level" placeholder="e.g. 12" step="0.1" oninput="calcHartford()" onchange="calcHartford()"></div>
+        </div>
+        <div id="hf-adj-note" style="display:none;font-family:'Space Mono',monospace;font-size:11px;color:var(--yellow);margin-bottom:12px;padding:8px 12px;background:rgba(255,214,0,.05);border-radius:8px;border:1px solid rgba(255,214,0,.2);"></div>
+        <div id="hf-res" style="display:none;">
+          <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px;">Adjusted plot point: t = <span id="hf-plot-t">—</span> h, C = <span id="hf-plot-c">—</span> mg/L</div>
+          <div style="background:var(--graph-bg);border-radius:12px;padding:12px;border:1px solid var(--border);margin-bottom:14px;">
+            <canvas id="hf-canvas" style="width:100%;height:auto;border-radius:6px;display:block;"></canvas>
+          </div>
+          <div style="padding:16px;border-radius:12px;text-align:center;margin-top:4px;" id="hf-rec-box">
+            <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:6px;">RECOMMENDED INTERVAL</div>
+            <div style="font-family:'Orbitron',monospace;font-size:28px;font-weight:700;" id="hf-interval">—</div>
+            <div style="font-family:'Space Mono',monospace;font-size:11px;margin-top:6px;" id="hf-interval-note"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- end tc-ss -->
+
+  <!-- ══════════ TAB 3: INITIAL DOSE ══════════ -->
+  <div id="tc-id" class="tab-content">
+    <!-- Demographics -->
+    <div class="card">
+      <div class="card-ttl"><div class="dot"></div>Patient Demographics &amp; Renal Function</div>
+      <div class="in-grid">
+        <div class="in-grp"><label class="in-label">Age (years)</label><input class="in-field" type="number" id="id-age" placeholder="e.g. 55" oninput="calcIDCrCl()" onchange="calcIDCrCl()"></div>
+        <div class="in-grp"><label class="in-label">ABW (kg)</label><input class="in-field" type="number" id="id-abw" placeholder="e.g. 70" oninput="calcIDCrCl()" onchange="calcIDCrCl()"></div>
+        <div class="in-grp"><label class="in-label">Height (cm)</label><input class="in-field" type="number" id="id-ht" placeholder="e.g. 165" oninput="calcIDCrCl()" onchange="calcIDCrCl()"></div>
+        <div class="in-grp"><label class="in-label">SCr (mg/dL)</label><input class="in-field" type="number" id="id-scr" placeholder="e.g. 1.0" step="0.01" oninput="calcIDCrCl()" onchange="calcIDCrCl()"></div>
+        <div class="in-grp"><label class="in-label">Cystatin-C (mg/L) <span style="font-size:9px;color:var(--dim);">OPT</span></label><input class="in-field" type="number" id="id-cysc" placeholder="e.g. 1.1" step="0.01" oninput="calcIDCrCl()" onchange="calcIDCrCl()"></div>
+      </div>
+      <div class="in-label" style="margin-bottom:8px;">Sex</div>
+      <div class="sex-toggle" style="max-width:260px;margin-bottom:16px;">
+        <button class="sex-btn active" id="id-sex-m" onclick="onIDSex('M')">♂ Male</button>
+        <button class="sex-btn" id="id-sex-f" onclick="onIDSex('F')">♀ Female</button>
+      </div>
+      <div id="id-bw-chip" style="display:none;margin-bottom:14px;">
+        <div class="sec-lbl">Weight Assessment</div>
+        <div class="pk-chips">
+          <div class="pk-chip"><div class="pk-chip-lbl">IBW</div><div class="pk-chip-val" id="id-ibw-val">—</div><div class="pk-chip-unit">kg</div></div>
+          <div class="pk-chip"><div class="pk-chip-lbl">Dosing Wt</div><div class="pk-chip-val" id="id-dwt-val" style="color:var(--cyan);">—</div><div class="pk-chip-unit">kg</div></div>
+          <div class="pk-chip" id="id-adjbw-chip" style="display:none;"><div class="pk-chip-lbl">AdjBW</div><div class="pk-chip-val" id="id-adjbw-val" style="color:var(--yellow);">—</div><div class="pk-chip-unit">kg</div></div>
+        </div>
+        <div id="id-obese-note" style="display:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--yellow);margin-top:8px;">⚠ Using AdjBW = IBW + 0.4(ABW − IBW)</div>
+      </div>
+      <div class="res-box" id="id-crcl-box" style="border-color:rgba(0,229,255,.18);">
+        <div class="res-row cyan"><span class="res-lbl">CrCl — Cockcroft-Gault (mL/min)</span><span class="res-val cyan" id="id-cg-val">—</span></div>
+        <div class="res-row cyan" id="id-ckd-row" style="display:none;"><span class="res-lbl">eGFR — CKD-EPI 2021 Cr-CysC</span><span class="res-val" style="color:var(--purple);" id="id-ckd-val">—</span></div>
+        <div id="id-crcl-pick-row" style="display:none;padding:12px 0 4px;">
+          <div class="in-label" style="color:var(--yellow);margin-bottom:10px;">▸ Select CrCl for PK:</div>
+          <div class="radio-row" style="margin-bottom:0;">
+            <label class="radio-opt active" id="id-pick-cg" onclick="onIDCrClPick('cg')"><input type="radio" name="id-crcl-src" value="cg" checked style="accent-color:var(--orange)"><span class="radio-lbl" style="font-size:12px;">C-G &nbsp;<span id="id-pick-cg-val" style="color:var(--orange);font-family:'Space Mono',monospace;font-size:11px;"></span></span></label>
+            <label class="radio-opt" id="id-pick-ckd" onclick="onIDCrClPick('ckd')"><input type="radio" name="id-crcl-src" value="ckd" style="accent-color:var(--orange)"><span class="radio-lbl" style="font-size:12px;">CKD-EPI &nbsp;<span id="id-pick-ckd-val" style="color:var(--purple);font-family:'Space Mono',monospace;font-size:11px;"></span></span></label>
+          </div>
+        </div>
+        <div class="res-row cyan" id="id-crcl-used-row" style="display:none;"><span class="res-lbl">→ CrCl for PK</span><span class="res-val" style="color:var(--green);" id="id-crcl-used-val">—</span></div>
+      </div>
+    </div>
+
+    <!-- PK Model -->
+    <div class="card yel" id="id-pk-card" style="display:none;">
+      <div class="card-ttl yel"><div class="dot yel"></div>Population PK Model (Dettli)</div>
+      <div class="pk-model-grid">
+        <div class="pk-model-card" data-mdl="std" onclick="selectIDModel('std')"><div class="pk-model-tag">Standard</div><div class="pk-model-name">Normal habitus</div><div class="pk-model-eq">K=0.0024·CrCl+0.01<br>Vd=0.25·DosWt L/kg</div></div>
+        <div class="pk-model-card" data-mdl="edema" onclick="selectIDModel('edema')"><div class="pk-model-tag">Edema</div><div class="pk-model-name">Fluid overload</div><div class="pk-model-eq">K=0.0024·CrCl+0.01<br>Vd=0.30·DosWt L/kg</div></div>
+        <div class="pk-model-card" data-mdl="lean" onclick="selectIDModel('lean')"><div class="pk-model-tag">Lean/Thin</div><div class="pk-model-name">Very underweight</div><div class="pk-model-eq">K=0.0024·CrCl+0.01<br>Vd=0.15·DosWt L/kg</div></div>
+      </div>
+      <div id="id-pk-chips" style="display:none;">
+        <div class="pk-chips">
+          <div class="pk-chip"><div class="pk-chip-lbl">k<sub>e</sub></div><div class="pk-chip-val" id="id-ke-chip">—</div><div class="pk-chip-unit">hr⁻¹</div></div>
+          <div class="pk-chip"><div class="pk-chip-lbl">V<sub>d</sub></div><div class="pk-chip-val" id="id-vd-chip">—</div><div class="pk-chip-unit">L</div></div>
+          <div class="pk-chip"><div class="pk-chip-lbl">t<sub>½</sub></div><div class="pk-chip-val" id="id-t12-chip">—</div><div class="pk-chip-unit">hr</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dosing Strategy -->
+    <div class="card orange" id="id-strat-card" style="display:none;">
+      <div class="card-ttl org"><div class="dot org"></div>Dosing Strategy</div>
+      <div class="strat-row">
+        <div class="strat-btn mdd active" id="id-strat-mdd" onclick="onIDStrat('mdd')"><div class="strat-btn-tag mdd">Traditional MDD</div><div class="strat-btn-name">1.5–2 mg/kg/dose</div><div class="strat-btn-sub">q8h/q12h/q24h by CrCl</div></div>
+        <div class="strat-btn eid" id="id-strat-eid" onclick="onIDStrat('eid')"><div class="strat-btn-tag eid">Extended Interval</div><div class="strat-btn-name">7 mg/kg (Hartford)</div><div class="strat-btn-sub">q24h/q36h/q48h by CrCl</div></div>
+      </div>
+    </div>
+
+    <!-- Dose Recommendation -->
+    <div class="card" id="id-dose-card" style="display:none;">
+      <div class="card-ttl"><div class="dot"></div>Dose Recommendation</div>
+      <!-- MDD -->
+      <div id="id-mdd-content">
+        <div class="info-note err" id="id-mdd-note" style="display:none;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="in-grp"><label class="in-label">Age Group</label>
+            <select id="mdd-age-grp" class="in-field" onchange="generateIDDoseRec()" style="color:var(--input-text);">
+              <option value="adult">Adult</option>
+              <option value="child">Children</option>
+            </select>
+          </div>
+          <div class="in-grp"><label class="in-label">Indication</label>
+            <select id="mdd-indication" class="in-field" onchange="generateIDDoseRec()" style="color:var(--input-text);">
+              <option value="gn_lt">Gram Negative — Life-threatening</option>
+              <option value="gn_serious">Gram Negative — Serious</option>
+              <option value="gn_uti">Gram Negative — UTI</option>
+              <option value="endo_tdd">Endocarditis — Synergy TDD</option>
+              <option value="endo_oid_strep">Endocarditis OID — Streptococci (alt, CrCl&gt;60)</option>
+              <option value="endo_oid_staph">Endocarditis OID — Staph/Enterococcus (alt, CrCl&gt;60)</option>
+              <option value="eid_mod">EID — Non-critically ill</option>
+              <option value="eid_crit">EID — Critically ill</option>
+            </select>
+          </div>
+        </div>
+        <div id="mdd-target-note" class="info-note" style="display:none;border-color:rgba(0,229,255,.2);background:rgba(0,229,255,.04);"></div>
+        <div id="id-mdd-pills" class="dose-pills"></div>
+        <div style="overflow-x:auto;margin-top:14px;">
+          <div class="md-hdr"><span>Interval</span><span>Dose</span><span>mg/kg</span><span>C<sub>max</sub>SS</span><span>Trough SS</span><span>Status</span></div>
+          <div class="md-table" id="id-mdd-table"></div>
+        </div>
+      </div>
+      <!-- EID -->
+      <div id="id-eid-content" style="display:none;">
+        <div class="info-note err" id="id-eid-note" style="display:none;"></div>
+        <div class="info-note">Hartford: <strong>7 mg/kg</strong> · Infusion 30–60 min<br>⚠ Exceptions: CrCl&lt;30, ascites, pregnancy, burns &gt;20%BSA → use Conventional<br>🔖 Draw random level 8–12 h after 1st dose → plot directly (no division needed)</div>
+        <div id="id-eid-pills" class="dose-pills"></div>
+        <div style="overflow-x:auto;margin-top:14px;">
+          <div class="md-hdr"><span>Interval</span><span>Dose</span><span>mg/kg</span><span>C<sub>max</sub>SS</span><span>Trough SS</span><span>Status</span></div>
+          <div class="md-table" id="id-eid-table"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regimen Design -->
+    <div class="card mag" id="id-design-card" style="display:none;">
+      <div class="card-ttl mag"><div class="dot mag"></div>Regimen Design — Steady State Simulation</div>
+      <div class="in-grid">
+        <div class="in-grp"><label class="in-label">Dose (mg)</label><input class="in-field mag" type="number" id="id-des-dose" oninput="calcIDDesign()" onchange="calcIDDesign()"></div>
+        <div class="in-grp"><label class="in-label">t' (hr)</label><input class="in-field mag" type="number" id="id-des-tp" value="0.5" step="0.25" oninput="calcIDDesign()" onchange="calcIDDesign()"></div>
+        <div class="in-grp"><label class="in-label">τ (hr)</label><input class="in-field mag" type="number" id="id-des-tau" oninput="calcIDDesign()" onchange="calcIDDesign()"></div>
+        <div class="in-grp"><label class="in-label">k<sub>e</sub> (hr⁻¹) EDITABLE</label><input class="in-field mag" type="number" id="id-des-ke" step="0.0001" oninput="calcIDDesign()" onchange="calcIDDesign()"></div>
+        <div class="in-grp"><label class="in-label">V<sub>d</sub> (L) EDITABLE</label><input class="in-field mag" type="number" id="id-des-vd" oninput="calcIDDesign()" onchange="calcIDDesign()"></div>
+        <div class="in-grp"><label class="in-label">MIC (mg/L) OPT</label><input class="in-field mag" type="number" id="id-des-mic" step="0.001" oninput="calcIDDesign()" onchange="calcIDDesign()"></div>
+      </div>
+      <div class="rr-grid" id="id-des-results" style="display:none;">
+        <div class="rr-box cyan"><div class="rr-lbl">C<sub>max</sub> SS</div><div class="rr-val cyan" id="id-des-cmax">—</div><div class="rr-unit">mg/L</div><div class="rr-status" id="id-des-cmax-status"></div></div>
+        <div class="rr-box mag"><div class="rr-lbl">C<sub>min</sub> SS</div><div class="rr-val mag" id="id-des-ctrough">—</div><div class="rr-unit">mg/L</div><div class="rr-status" id="id-des-ctrough-status"></div></div>
+        <div class="rr-box org"><div class="rr-lbl">C<sub>max</sub>/MIC</div><div class="rr-val org" id="id-des-cmic">—</div><div class="rr-unit">target ≥8–10</div></div>
+        <div class="rr-box grn"><div class="rr-lbl">t<sub>½</sub></div><div class="rr-val grn" id="id-des-t12">—</div><div class="rr-unit">hr</div></div>
+      </div>
+      <div class="graph-wrap" id="id-des-graph-wrap"><div class="graph-lbl">INITIAL DOSE — APPROACH TO STEADY STATE</div><canvas id="id-des-canvas"></canvas></div>
+    </div>
+  </div><!-- end tc-id -->
+</div><!-- end page-amk -->
+
+<footer>
+  <div class="ft-name">Developed by: Methawarathep Thongthaab, PharmD, RPh</div>
+  <div class="ft-org">Clinical Pharmacy Section · Pharmacy Division · Faculty of Medicine Ramathibodi Hospital · Mahidol University</div>
+</footer>
+
+<script>
+/* ════════ THEME ════════ */
+function isDark(){return document.documentElement.getAttribute('data-theme')!=='light';}
+function gAxisColor(){return isDark()?'rgba(104,104,160,.8)':'rgba(60,80,110,.85)';}
+function gGridColor(){return isDark()?'rgba(104,104,160,.14)':'rgba(100,130,170,.18)';}
+function gAxisLabelColor(){return isDark()?'rgba(136,136,180,.85)':'rgba(50,70,100,.75)';}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('tt-icon').textContent=t==='dark'?'☀️':'🌙';
+  document.getElementById('tt-lbl').textContent=t==='dark'?'LIGHT':'DARK';
+  try{localStorage.setItem('cmyk-theme',t);}catch(e){}
+}
+function toggleTheme(){applyTheme(isDark()?'light':'dark');}
+(function(){let s='dark';try{s=localStorage.getItem('cmyk-theme')||'dark';}catch(e){}applyTheme(s);})();
+
+/* ════════ NAV ════════ */
+function goBack(){if(document.referrer)window.history.back();else window.location.href='index.html';}
+
+/* ════════ TABS ════════ */
+function switchTab(t){
+  ['pt','ss','id'].forEach(n=>{
+    document.getElementById('tab-btn-'+n).classList.toggle('active',t===n);
+    document.getElementById('tc-'+n).classList.toggle('active',t===n);
+  });
+}
+
+/* ════════ GRAPH LIGHTBOX ════════ */
+function initGraphTap(wrapId,title){
+  const wrap=document.getElementById(wrapId);
+  if(!wrap) return;
+  wrap.addEventListener('click',()=>{
+    const src=wrap.querySelector('canvas');
+    if(!src) return;
+    const lb=document.getElementById('graph-lightbox');
+    const lbc=document.getElementById('lb-canvas');
+    document.getElementById('lb-title').textContent=title||'GRAPH';
+    lbc.width=src.width;lbc.height=src.height;
+    lbc.style.width='100%';lbc.style.height='auto';
+    lbc.getContext('2d').drawImage(src,0,0);
+    lb.classList.add('open');document.body.style.overflow='hidden';
+  });
+}
+function closeLightbox(){document.getElementById('graph-lightbox').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+
+/* ════════ HELPERS ════════ */
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.add('show');}
+function hideErr(id){const e=document.getElementById(id);if(e)e.classList.remove('show');}
+function fieldVal(id,fb){
+  const el=document.getElementById(id);if(!el)return fb;
+  const v=el.value.trim();if(v==='')return(fb!==undefined?fb:null);
+  const n=parseFloat(v);return isNaN(n)?(fb!==undefined?fb:null):n;
+}
+function roundTo50(x){return Math.round(x/50)*50;}
+function roundTo10(x){return Math.round(x/10)*10;}  // Gentamicin: small doses, 10 mg precision
+function cmaxSS(D,ke,Vd,tp,tau){return D*(1-Math.exp(-ke*tp))/(ke*Vd*tp*(1-Math.exp(-ke*tau)));}
+function cminSS(cmax,ke,tp,tau){return cmax*Math.exp(-ke*(tau-tp));}
+
+/* ════════ MIC-BASED PEAK TARGET ════════ */
+let ptStrat='mdd';
+let peakTgtLo=4,peakTgtHi=10,peakTgtMode='usual';
+
+function onStrat(s){
+  ptStrat=s;
+  ['mdd','eid'].forEach(x=>{document.getElementById('strat-'+x).classList.toggle('active',x===s);});
+  const micSec=document.getElementById('mdd-mic-section');
+  if(micSec) micSec.style.display=s==='mdd'?'block':'none';
+  calcPTRegimen();
+}
+function onStratMIC(){
+  const mic=fieldVal('strat-mic',0);
+  const micRow=document.getElementById('mic-target-row');
+  const noMsg=document.getElementById('no-mic-msg');
+  if(mic>0){micRow.style.display='block';noMsg.style.display='none';onTargetPick(peakTgtMode);}
+  else{micRow.style.display='none';noMsg.style.display='block';peakTgtLo=20;peakTgtHi=30;updatePeakDisplay();}
+}
+function onTargetPick(m){
+  peakTgtMode=m;
+  ['8-10','10-12','custom','usual'].forEach(k=>{const el=document.getElementById('tgt-'+k);if(el)el.classList.toggle('selected',k===m);});
+  document.getElementById('custom-n-wrap').style.display=m==='custom'?'block':'none';
+  const mic=fieldVal('strat-mic',0);
+  if(mic>0&&m!=='usual'){
+    let lo,hi;
+    if(m==='8-10'){lo=8;hi=10;}else if(m==='10-12'){lo=10;hi=12;}
+    else{const n=fieldVal('strat-n',8);lo=n;hi=n;}
+    peakTgtLo=Math.round(lo*mic*10)/10; peakTgtHi=Math.round(hi*mic*10)/10;
+  } else {peakTgtLo=4;peakTgtHi=10;}
+  updatePeakDisplay();
+}
+function updatePeakDisplay(){
+  const el=document.getElementById('peak-target-display');
+  if(el) el.textContent='Peak target: '+peakTgtLo+'–'+peakTgtHi+' mg/L';
+  const sub=document.getElementById('strat-mdd-sub');
+  if(sub) sub.textContent='Peak '+peakTgtLo+'–'+peakTgtHi+' · Trough &lt;2 mg/L';
+  const chip=document.getElementById('tgt-mdd-chip');
+  if(chip) chip.textContent='💉 MDD · Peak '+peakTgtLo+'–'+peakTgtHi+' · Trough &lt;2 mg/L';
+  calcPTRegimen();
+}
+function stratTargets(s){
+  if(s==='eid') return {cmaxLo:8,cmaxHi:12,ctroughHi:1};
+  return {cmaxLo:peakTgtLo,cmaxHi:peakTgtHi,ctroughHi:2};
+}
+function cmaxStatus(v,s){
+  const {cmaxLo,cmaxHi}=stratTargets(s);
+  if(v<cmaxLo)return {txt:'Sub-therapeutic',cls:'status-lo'};
+  if(v>cmaxHi)return {txt:'Supratherapeutic',cls:'status-hi'};
+  return {txt:'On target ✓',cls:'status-ok'};
+}
+function ctroughStatus(v,s){
+  if(v>2) return {txt:'▼ >2 mg/L — nephrotoxicity risk',cls:'status-lo'};
+  if(v>1)  return {txt:'⚠ 1–2 mg/L — monitor renal function',cls:'status-hi'};
+  if(v>=0.25) return {txt:'✓ <1 mg/L — safe',cls:'status-ok'};
+  return {txt:'Below detection limit (0.25 µg/mL)',cls:'status-hi'};
+}
+
+/* ════════ GRAPH DRAWING ════════ */
+function drawMultiDoseGraph(canvasId,wrapId,ke,D,Vd,tp,tau,label,cmaxTarget,ctroughTarget){
+  const wrap=document.getElementById(wrapId);
+  const canvas=document.getElementById(canvasId);
+  if(!wrap||!canvas) return;
+  wrap.style.display='block';
+  const dpr=window.devicePixelRatio||1;
+  const W=wrap.clientWidth-28;
+  const H=Math.round(W*0.46);
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const N=6,total=N*tau;
+  const pad={t:16,r:18,b:46,l:54};
+  const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  function concAt(t){
+    let C=0;
+    for(let j=0;j<N;j++){
+      const dt=t-j*tau;if(dt<0)break;
+      const R=D/(ke*Vd*tp);
+      C+=(dt<=tp)?R*(1-Math.exp(-ke*dt)):R*(1-Math.exp(-ke*tp))*Math.exp(-ke*(dt-tp));
+    }
+    return C;
+  }
+  const pts=600,times=[],concs=[];
+  for(let i=0;i<=pts;i++){const t=i/pts*total;times.push(t);concs.push(concAt(t));}
+  const maxC=Math.max(...concs,cmaxTarget?cmaxTarget[1]:0)*1.18;
+  const tx=t=>pad.l+(t/total)*gW,ty=c=>pad.t+gH-(c/maxC)*gH;
+  for(let i=0;i<=5;i++){
+    const y=pad.t+(i/5)*gH;
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='right';
+    ctx.fillText((maxC*(1-i/5)).toFixed(1),pad.l-7,y+4);
+  }
+  for(let i=0;i<=N;i++){
+    const x=tx(i*tau);
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='center';
+    ctx.fillText((i*tau).toFixed(0),x,pad.t+gH+18);
+  }
+  ctx.fillStyle=gAxisLabelColor();ctx.font='11px DM Sans';ctx.textAlign='center';
+  ctx.fillText('Time (hr)',pad.l+gW/2,H-4);
+  ctx.save();ctx.translate(13,pad.t+gH/2);ctx.rotate(-Math.PI/2);ctx.fillText('Conc. (mg/L)',0,0);ctx.restore();
+  if(cmaxTarget&&cmaxTarget[1]<maxC){
+    ctx.fillStyle='rgba(0,229,255,.06)';ctx.fillRect(pad.l,ty(cmaxTarget[1]),gW,ty(cmaxTarget[0])-ty(cmaxTarget[1]));
+    ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(0,229,255,.35)';ctx.lineWidth=1;
+    [cmaxTarget[0],cmaxTarget[1]].forEach(v=>{ctx.beginPath();ctx.moveTo(pad.l,ty(v));ctx.lineTo(pad.l+gW,ty(v));ctx.stroke();});
+    ctx.setLineDash([]);
+  }
+  if(ctroughTarget&&ctroughTarget[1]<maxC){
+    ctx.fillStyle='rgba(0,255,179,.05)';ctx.fillRect(pad.l,ty(ctroughTarget[1]),gW,ty(ctroughTarget[0])-ty(ctroughTarget[1]));
+    ctx.setLineDash([4,4]);ctx.strokeStyle='rgba(0,255,179,.3)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,ty(ctroughTarget[1]));ctx.lineTo(pad.l+gW,ty(ctroughTarget[1]));ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(255,214,0,.22)';ctx.lineWidth=1;
+  for(let j=0;j<N;j++){const x=tx(j*tau);ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();}
+  ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(tx(times[0]),ty(0));
+  for(let i=0;i<times.length;i++) ctx.lineTo(tx(times[i]),ty(concs[i]));
+  ctx.lineTo(tx(times[times.length-1]),ty(0));ctx.closePath();
+  const fg=ctx.createLinearGradient(0,pad.t,0,pad.t+gH);
+  fg.addColorStop(0,'rgba(255,124,0,.12)');fg.addColorStop(1,'rgba(255,124,0,0)');
+  ctx.fillStyle=fg;ctx.fill();
+  const lg=ctx.createLinearGradient(pad.l,0,pad.l+gW,0);
+  lg.addColorStop(0,'#ff0088');lg.addColorStop(0.5,'#ff7c00');lg.addColorStop(1,'#00e5ff');
+  ctx.beginPath();ctx.moveTo(tx(times[0]),ty(concs[0]));
+  for(let i=1;i<times.length;i++) ctx.lineTo(tx(times[i]),ty(concs[i]));
+  ctx.strokeStyle=lg;ctx.lineWidth=2.5;ctx.stroke();
+  ctx.strokeStyle=isDark()?'rgba(104,104,160,.45)':'rgba(80,110,150,.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
+}
+
+/* ════════ TAB 1: PEAK-TROUGH ════════ */
+let PT={};
+function calcPTke(){
+  const Cp=fieldVal('pt-cpeak',null);
+  const Ct=fieldVal('pt-ctrough',null);
+  const T=fieldVal('pt-tbetw',null);
+  document.getElementById('pt-vd-card').style.display='none';
+  document.getElementById('pt-auc-card').style.display='none';
+  document.getElementById('pt-ke-disp').classList.remove('show');
+  document.getElementById('pt-t12-disp').classList.remove('show');
+  if(!Cp||!Ct||!T||Cp<=0||Ct<=0||T<=0||Cp<=Ct) return;
+  const ke=Math.log(Cp/Ct)/T;
+  const t12=Math.LN2/ke;
+  PT={ke,Cp,Ct,T};
+  document.getElementById('pt-ke-val').textContent=ke.toFixed(5)+' hr⁻¹';
+  document.getElementById('pt-t12-val').textContent=t12.toFixed(2)+' hr';
+  document.getElementById('pt-ke-disp').classList.add('show');
+  document.getElementById('pt-t12-disp').classList.add('show');
+  document.getElementById('pt-vd-ps-cpeak').textContent=Cp+' mg/L';
+  document.getElementById('pt-vd-ps-ctrough').textContent=Ct+' mg/L';
+  document.getElementById('pt-vd-ps-ke').textContent=ke.toFixed(5)+' hr⁻¹';
+  document.getElementById('pt-vd-card').style.display='block';
+  calcPTVd();
+}
+function calcPTVd(){
+  if(!PT.ke) return;
+  const D=fieldVal('pt-dose',null);
+  const tp=fieldVal('pt-tp',null);
+  document.getElementById('pt-vd-res-disp').classList.remove('show');
+  PT.Vd=null; PT.D=null; PT.tp=null;
+  if(!D||!tp||D<=0||tp<=0) return;
+  const ke=PT.ke,Cp=PT.Cp,Ct=PT.Ct;
+  const skip=document.getElementById('pt-skip-extrap').checked;
+  document.getElementById('pt-extrap-inputs').style.display=skip?'none':'block';
+  let Cmax,Cmin;
+  if(skip){
+    Cmax=Cp;Cmin=Ct;
+    document.getElementById('pt-cmax-echo-wrap').style.display='none';
+    document.getElementById('pt-cmin-echo-wrap').style.display='none';
+  } else {
+    const tstar=fieldVal('pt-tstar',0);
+    const tpp=fieldVal('pt-tpp',0);
+    Cmax=Cp*Math.exp(ke*tstar);
+    Cmin=Ct*Math.exp(-ke*tpp);
+    document.getElementById('pt-cmax-echo-wrap').style.display='inline';
+    document.getElementById('pt-cmin-echo-wrap').style.display='inline';
+    document.getElementById('pt-cmax-echo').textContent=Cmax.toFixed(2)+' mg/L';
+    document.getElementById('pt-cmin-echo').textContent=Cmin.toFixed(2)+' mg/L';
+  }
+  const expkt=Math.exp(-ke*tp);
+  const den=tp*ke*(Cmax-Cmin*expkt);
+  if(Math.abs(den)<1e-10||den<=0) return;
+  const Vd=D*(1-expkt)/den;
+  if(Vd<=0||!isFinite(Vd)) return;
+  PT.Vd=Vd;PT.D=D;PT.tp=tp;
+  document.getElementById('pt-vd-res-val').textContent=Vd.toFixed(2)+' L';
+  document.getElementById('pt-vd-res-disp').classList.add('show');
+  const nke=document.getElementById('pt-nke');
+  const nvd=document.getElementById('pt-nvd');
+  if(!nke.value) nke.value=ke.toFixed(5);
+  if(!nvd.value) nvd.value=Vd.toFixed(2);
+  const tau=fieldVal('pt-tau',null);
+  if(tau&&!document.getElementById('pt-ntau').value) document.getElementById('pt-ntau').value=tau;
+}
+function calcPTSolve(){
+  const ke=PT.ke;
+  const Vd=PT.Vd;
+  const D=PT.D||fieldVal('pt-dose',null);
+  const tp=PT.tp||fieldVal('pt-tp',null);
+  const tau=fieldVal('pt-tau',null)||fieldVal('pt-ntau',null);
+  document.getElementById('pt-solve-box').classList.remove('show');
+  document.getElementById('pts-graph-wrap').style.display='none';
+  if(!ke||!Vd||!D||!tp||!tau||tp>=tau) return;
+  const t12=Math.LN2/ke;
+  const Cmax=cmaxSS(D,ke,Vd,tp,tau);
+  const Cmin=cminSS(Cmax,ke,tp,tau);
+  document.getElementById('pts-ke').textContent=ke.toFixed(5)+' hr⁻¹';
+  document.getElementById('pts-t12').textContent=t12.toFixed(2)+' hr';
+  document.getElementById('pts-vd').textContent=Vd.toFixed(2)+' L';
+  document.getElementById('pts-cmax').textContent=Cmax.toFixed(2)+' mg/L';
+  document.getElementById('pts-cmin').textContent=Cmin.toFixed(2)+' mg/L';
+  PT.Cmax=Cmax; PT.Cmin=Cmin; PT.tau=tau;
+  const cmaxSt=cmaxStatus(Cmax,ptStrat),cminSt=ctroughStatus(Cmin,ptStrat);
+  const cmxEl=document.getElementById('pts-cmax-status');
+  const cmnEl=document.getElementById('pts-cmin-status');
+  if(cmxEl){cmxEl.textContent=cmaxSt.txt;cmxEl.className='rr-status '+cmaxSt.cls;}
+  if(cmnEl){cmnEl.textContent=cminSt.txt;cmnEl.className='rr-status '+cminSt.cls;}
+  document.getElementById('pt-solve-box').classList.add('show');
+  const t=stratTargets(ptStrat);
+  drawMultiDoseGraph('pts-canvas','pts-graph-wrap',ke,D,Vd,tp,tau,'',[t.cmaxLo,t.cmaxHi],[0,t.ctroughHi]);
+  document.getElementById('pt-auc-card').style.display='block';
+  document.getElementById('pt-nke').value=ke.toFixed(5);
+  document.getElementById('pt-nvd').value=Vd.toFixed(2);
+  document.getElementById('pt-ntp').value=tp;
+  if(tau) document.getElementById('pt-ntau').value=tau;
+  calcPTAuc(); calcPTRegimen();
+  setTimeout(()=>document.getElementById('pt-solve-box').scrollIntoView({behavior:'smooth',block:'center'}),150);
+}
+/* ── PT AUC 3-method ── */
+let ptAucMethod='trad', ptIntgState='ss';
+function _ptShowAUC(AUC,mic,lbl){
+  const lblEl=document.getElementById('pt-auc-lbl');
+  if(lblEl)lblEl.innerHTML='AUC<sub>0–24h</sub> ('+lbl+')';
+  document.getElementById('pt-auc-val').textContent=AUC.toFixed(1);
+  document.getElementById('pt-auc-box').classList.add('show');
+  const b2=document.getElementById('pt-aucmic-box');
+  if(mic>0){document.getElementById('pt-aucmic-val').textContent=(AUC/mic).toFixed(1);b2.style.display='block';b2.classList.add('show');}
+  else b2.style.display='none';
+}
+function _ptHideAUC(){
+  document.getElementById('pt-auc-box').classList.remove('show');
+  document.getElementById('pt-aucmic-box').classList.remove('show');
+}
+function onPTAucMethod(m){
+  ptAucMethod=m;
+  ['trad','intg','mbal'].forEach(k=>{const el=document.getElementById('pt-mth-'+k);if(el)el.classList.toggle('active',k===m);});
+  document.getElementById('pt-trad-wrap').style.display=m==='trad'?'block':'none';
+  document.getElementById('pt-intg-wrap').style.display=m==='intg'?'block':'none';
+  document.getElementById('pt-mbal-wrap').style.display=m==='mbal'?'block':'none';
+  _ptHideAUC();
+  if(m==='trad')calcPTAucTrad();else if(m==='intg')calcPTAucIntg();else calcPTAucMbal();
+}
+function onPTIntgState(s){
+  ptIntgState=s;
+  document.getElementById('pt-intg-ss-btn').classList.toggle('pill-sel',s==='ss');
+  document.getElementById('pt-intg-nd-btn').classList.toggle('pill-sel',s==='ndose');
+  document.getElementById('pt-intg-ndose-wrap').style.display=s==='ndose'?'block':'none';
+  const lbl=document.getElementById('pt-intg-eq-label');
+  if(lbl)lbl.textContent=s==='ss'?'Steady State':'After N doses';
+  calcPTAucIntg();
+}
+function _integAMK(ke,D,Vd,tp,tau,n){
+  const k0=D/(ke*Vd*tp),denom=1-Math.exp(-ke*tau),isSS=(n===null||n===undefined);
+  function Cn(t){
+    const AFp=isSS?1/denom:(n>1?(1-Math.exp(-(n-1)*ke*tau))/denom:0);
+    const AFn=isSS?1/denom:(1-Math.exp(-n*ke*tau))/denom;
+    if(t<=tp)return k0*(1-Math.exp(-ke*t))+k0*(1-Math.exp(-ke*tp))*AFp*Math.exp(-ke*(t+tau-tp));
+    return k0*(1-Math.exp(-ke*tp))*AFn*Math.exp(-ke*(t-tp));
+  }
+  const steps=1000,h=tau/steps;let s=Cn(0)+Cn(tau);
+  for(let i=1;i<steps;i++)s+=(i%2===0?2:4)*Cn(i*h);
+  return s*h/3;
+}
+function calcPTAucTrad(){
+  const ke=PT.ke,Cmax=PT.Cmax,Cmin=PT.Cmin;
+  const tau=PT.tau||fieldVal('pt-tau',null)||fieldVal('pt-ntau',null);
+  const mic=fieldVal('pt-trad-mic',0);
+  if(!ke||!Cmax||!Cmin||!tau||Cmax<=Cmin){_ptHideAUC();return;}
+  const AUC=((Cmax-Cmin)/ke)*(24/tau);
+  if(!isFinite(AUC)||AUC<=0){_ptHideAUC();return;}
+  _ptShowAUC(AUC,mic,'Traditional');
+}
+function calcPTAucIntg(){
+  const ke=PT.ke,Vd=PT.Vd,D=PT.D,tp=PT.tp;
+  const tau=PT.tau||fieldVal('pt-tau',null)||fieldVal('pt-ntau',null);
+  const mic=fieldVal('pt-intg-mic',0);
+  let nDoses=null;
+  if(ptIntgState==='ndose'){const nv=+document.getElementById('pt-intg-ndose').value||0;if(nv>=1)nDoses=Math.round(nv);}
+  if(!ke||!Vd||!D||!tp||!tau||tp>=tau){_ptHideAUC();return;}
+  const AUC=_integAMK(ke,D,Vd,tp,tau,nDoses)*(24/tau);
+  if(!isFinite(AUC)||AUC<=0){_ptHideAUC();return;}
+  _ptShowAUC(AUC,mic,nDoses?'Integral N='+nDoses:'Integral SS');
+}
+function calcPTAucMbal(){
+  const ke=PT.ke,Vd=PT.Vd,D=PT.D;
+  const tau=PT.tau||fieldVal('pt-tau',null)||fieldVal('pt-ntau',null);
+  const mic=fieldVal('pt-mbal-mic',0);
+  if(!ke||!Vd||!D||!tau){_ptHideAUC();return;}
+  const AUC=(D/(ke*Vd))*(24/tau);
+  if(!isFinite(AUC)||AUC<=0){_ptHideAUC();return;}
+  _ptShowAUC(AUC,mic,'Mass Balance');
+}
+function calcPTAuc(){
+  if(ptAucMethod==='intg')calcPTAucIntg();
+  else if(ptAucMethod==='mbal')calcPTAucMbal();
+  else calcPTAucTrad();
+}
+function calcPTRegimen(){
+  const D=fieldVal('pt-nd',null);
+  const tp=fieldVal('pt-ntp',0.5);
+  const tau=fieldVal('pt-ntau',null);
+  const ke=fieldVal('pt-nke',PT.ke);
+  const Vd=fieldVal('pt-nvd',PT.Vd);
+  const mic=fieldVal('pt-mic',0);
+  const res=document.getElementById('pt-reg-results');
+  if(!D||!tp||!tau||!ke||!Vd||D<=0||tp<=0||tau<=tp){res.style.display='none';document.getElementById('pt-graph-wrap').style.display='none';return;}
+  const Cmax=cmaxSS(D,ke,Vd,tp,tau);
+  const Ctrough=cminSS(Cmax,ke,tp,tau);
+  const t12=Math.LN2/ke;
+  const cmic=mic>0?Cmax/mic:null;
+  const cmSt=cmaxStatus(Cmax,ptStrat);
+  const ctSt=ctroughStatus(Ctrough,ptStrat);
+  document.getElementById('pt-res-cmax').textContent=Cmax.toFixed(2)+' mg/L';
+  document.getElementById('pt-res-ctrough').textContent=Ctrough.toFixed(2)+' mg/L';
+  document.getElementById('pt-res-t12').textContent=t12.toFixed(2)+' hr';
+  document.getElementById('pt-res-cmax-status').textContent=cmSt.txt;
+  document.getElementById('pt-res-cmax-status').className='rr-status '+cmSt.cls;
+  document.getElementById('pt-res-ctrough-status').textContent=ctSt.txt;
+  document.getElementById('pt-res-ctrough-status').className='rr-status '+ctSt.cls;
+  if(cmic!==null){
+    document.getElementById('pt-res-cmic').textContent=cmic.toFixed(1);
+    const cl=cmic>=10?'status-ok':cmic>=8?'status-hi':'status-lo';
+    document.getElementById('pt-res-cmic-status').textContent=cmic>=10?'Target met ✓':cmic>=8?'Borderline':'Sub-target';
+    document.getElementById('pt-res-cmic-status').className='rr-status '+cl;
+  } else {document.getElementById('pt-res-cmic').textContent='—';document.getElementById('pt-res-cmic-status').textContent='Enter MIC';}
+  res.style.display='grid';
+  const t=stratTargets(ptStrat);
+  drawMultiDoseGraph('pt-canvas','pt-graph-wrap',ke,D,Vd,tp,tau,'',[t.cmaxLo,t.cmaxHi],[0,t.ctroughHi]);
+}
+
+/* ════════ TAB 2: SINGLE SAMPLE ════════ */
+let ssMode='trough';
+const SS_DESC={
+  trough:'Peak target confirmed after multiple doses. Measure trough 30 min before next dose. Checks trough safety and derives PK parameters.',
+  peak:'Measure peak 30–60 min after end of infusion. Confirms peak is on target. Extrapolates measured level back to true C\u2098\u2090\u2093 at end of infusion.',
+  hartford:'Hartford nomogram for EID interval selection after a test dose (7 mg/kg gentamicin or 15 mg/kg amikacin). Draw random level 8–12 h after start of infusion.'
+};
+function onSSMode(m){
+  ssMode=m;
+  ['trough','peak','hartford'].forEach(x=>{document.getElementById('ssm-'+x).classList.toggle('active',x===m);});
+  document.getElementById('ss-trough-wrap').style.display=m==='trough'?'block':'none';
+  document.getElementById('ss-peak-wrap').style.display=m==='peak'?'block':'none';
+  document.getElementById('ss-hartford-wrap').style.display=m==='hartford'?'block':'none';
+  document.getElementById('ssm-desc').innerHTML=SS_DESC[m]||'';
+}
+/* ── Single Trough: Vd model + ke solver ── */
+let SSTmdl='std', SSTkeMethod='exact';
+function selectSSTModel(m){
+  SSTmdl=m;
+  document.querySelectorAll('[data-sst-mdl]').forEach(c=>c.classList.toggle('selected',c.dataset.sstMdl===m));
+  calcSSTVd();
+}
+function calcSSTVd(){
+  const crcl=fieldVal('sst-crcl',null);
+  const dwt=fieldVal('sst-dwt',null);
+  const vdFrac={std:0.25,edema:0.30,lean:0.15}[SSTmdl]||0.25;
+  if(!crcl||!dwt||crcl<=0||dwt<=0){
+    const manual=fieldVal('sst-vd',null);
+    if(manual&&manual>0){document.getElementById('sst-vd-disp').classList.add('show');document.getElementById('sst-vd-val').textContent=manual.toFixed(2)+' L';}
+    return;
+  }
+  const Vd=vdFrac*dwt;
+  document.getElementById('sst-vd').value=Vd.toFixed(2);
+  document.getElementById('sst-vd-val').textContent=Vd.toFixed(2)+' L (Dettli '+SSTmdl+')';
+  document.getElementById('sst-vd-disp').classList.add('show');
+  calcSSTke();
+}
+function onSSTMethod(m){
+  SSTkeMethod=m;
+  const eCard=document.getElementById('sst-km-exact'),pCard=document.getElementById('sst-km-proxy');
+  if(m==='exact'){
+    eCard.style.borderColor='var(--cyan)';eCard.style.background='rgba(0,229,255,.06)';
+    pCard.style.borderColor='var(--in-br)';pCard.style.background='var(--in-bg)';
+  } else {
+    pCard.style.borderColor='var(--yellow)';pCard.style.background='rgba(255,214,0,.06)';
+    eCard.style.borderColor='var(--in-br)';eCard.style.background='var(--in-bg)';
+  }
+  document.getElementById('sst-km-exact-check').style.display=m==='exact'?'block':'none';
+  document.getElementById('sst-km-proxy-check').style.display=m==='proxy'?'block':'none';
+  document.getElementById('sst-exact-wrap').style.display=m==='exact'?'block':'none';
+  document.getElementById('sst-proxy-wrap').style.display=m==='proxy'?'block':'none';
+}
+function livePreviewSST(){
+  if(SSTkeMethod==='proxy'){
+    const Vd=fieldVal('sst-vd',null);
+    const D=fieldVal('sst-dose-p',null);
+    const tau=fieldVal('sst-tau-p',null);
+    const Ct=fieldVal('sst-ct-proxy',null);
+    const prev=document.getElementById('sst-proxy-preview');
+    if(!Vd||!D||!tau||!Ct||Vd<=0||D<=0||tau<=0||Ct<=0){prev.textContent='';return;}
+    const arg=(Ct+D/Vd)/Ct;
+    if(arg<=1){prev.textContent='⚠ (Ct+D/Vd)/Ct must be >1';return;}
+    const ke=Math.log(arg)/tau;
+    if(ke<=0||!isFinite(ke)){prev.textContent='⚠ Invalid ke';return;}
+    prev.textContent='Preview: ke ≈ '+ke.toFixed(5)+' hr⁻¹  ·  t½ ≈ '+(Math.LN2/ke).toFixed(1)+' hr  (click Solve to confirm)';
+  }
+}
+function calcSSTke(){livePreviewSST();}  // delegate to live preview engine
+function solveKeAMK(D,Vd,tp,tau,N,t,Ct){
+  // Bisection solve for ke in: Ct = [D/(ke*Vd*tp)] * (1-e^-ke*tp) * (1-e^-N*ke*tau)/(1-e^-ke*tau) * e^-ke*t
+  function f(ke){
+    if(ke<=0) return Infinity;
+    const R=D/(ke*Vd*tp);
+    const num=(1-Math.exp(-ke*tp));
+    const acc=(1-Math.exp(-N*ke*tau))/(1-Math.exp(-ke*tau));
+    return R*num*acc*Math.exp(-ke*t)-Ct;
+  }
+  let lo=1e-6,hi=5,flo=f(lo),fhi=f(hi);
+  if(flo*fhi>0){hi=20;fhi=f(hi);}
+  if(flo*fhi>0)return null;
+  for(let i=0;i<120;i++){
+    const mid=(lo+hi)/2,fmid=f(mid);
+    if(Math.abs(fmid)<1e-10||Math.abs(hi-lo)<1e-10) return mid;
+    if(flo*fmid<0){hi=mid;fhi=fmid;}else{lo=mid;flo=fmid;}
+  }
+  return (lo+hi)/2;
+}
+function calcSSTSolve(){
+  hideErr('ss-err');
+  const Vd=fieldVal('sst-vd',null);
+  document.getElementById('ss-res-box').classList.remove('show');
+  document.getElementById('ss-graph-wrap').style.display='none';
+  if(!Vd||Vd<=0){showErr('ss-err','⚠ Enter CrCl + weight or override Vd first.');return;}
+  let ke=null,Ct=null,D=null,tp=null,tau=null;
+  if(SSTkeMethod==='exact'){
+    D=fieldVal('sst-dose',null);tp=fieldVal('sst-tp',null);
+    tau=fieldVal('sst-tau',null);const N=fieldVal('sst-n',4);
+    const t=fieldVal('sst-t',null);Ct=fieldVal('sst-ct-exact',null);
+    if(!D||!tp||!tau||!t||!Ct||[D,tp,tau,t,Ct].some(v=>v<=0)){showErr('ss-err','⚠ Fill all Exact Analytic inputs.');return;}
+    if(tp>=tau){showErr('ss-err',"⚠ t' must be < τ.");return;}
+    ke=solveKeAMK(D,Vd,tp,tau,N,t,Ct);
+    if(!ke||ke<=0){showErr('ss-err','⚠ Could not converge. Check your inputs.');return;}
+  } else {
+    D=fieldVal('sst-dose-p',null);tau=fieldVal('sst-tau-p',null);
+    Ct=fieldVal('sst-ct-proxy',null);tp=0.5;
+    if(!D||!tau||!Ct||[D,tau,Ct].some(v=>v<=0)){showErr('ss-err','⚠ Fill all Bolus Proxy inputs.');return;}
+    const arg=(Ct+D/Vd)/Ct;
+    if(arg<=1){showErr('ss-err','⚠ (Ct+D/Vd)/Ct must be >1.');return;}
+    ke=Math.log(arg)/tau;
+    if(!ke||ke<=0){showErr('ss-err','⚠ Invalid ke from Bolus Proxy.');return;}
+  }
+  const t12=Math.LN2/ke;
+  const Cmax=cmaxSS(D,ke,Vd,tp,tau);
+  document.getElementById('ss-res-ke').textContent=ke.toFixed(5)+' hr⁻¹';
+  document.getElementById('ss-res-t12').textContent=t12.toFixed(2)+' hr';
+  document.getElementById('ss-res-vd').textContent=Vd.toFixed(2)+' L';
+  document.getElementById('ss-res-cmax').textContent=Cmax.toFixed(2)+' mg/L';
+  document.getElementById('ss-res-ctrough').textContent=Ct.toFixed(2)+' mg/L (measured)';
+  const strat=ptStrat;
+  document.getElementById('ss-strat-tag').textContent=strat==='eid'?'EID':'MDD';
+  const ctSt=ctroughStatus(Ct,strat);
+  const stEl=document.getElementById('ss-status');stEl.textContent=ctSt.txt;stEl.className=ctSt.cls;
+  document.getElementById('ss-res-box').classList.add('show');
+  const t=stratTargets(strat);
+  drawMultiDoseGraph('ss-canvas','ss-graph-wrap',ke,D,Vd,tp,tau,'',[t.cmaxLo,t.cmaxHi],[0,t.ctroughHi]);
+  // Autofill holding time
+  document.getElementById('ht-ke').value=ke.toFixed(5);
+  document.getElementById('ht-ct').value=Ct;
+  calcHT();
+}
+function calcSST(){calcSSTSolve();}  // legacy alias
+function calcHT(){
+  const ke=fieldVal('ht-ke',null);
+  const Ct=fieldVal('ht-ct',null);
+  const tp=fieldVal('ht-tpass',null);
+  const res=document.getElementById('ht-res');
+  if(!ke||!Ct||!tp||ke<=0||Ct<=0||tp<=0){res.style.display='none';return;}
+  const Cr=Ct*Math.exp(-ke*tp);
+  document.getElementById('ht-tpass-echo').textContent=tp;
+  document.getElementById('ht-remain').textContent=Cr.toFixed(2)+' mg/L';
+  let col,txt;
+  if(Cr>=0.25&&Cr<1){col='var(--green)';txt='✓ Preferred safe range (<1 mg/L)';}
+  else if(Cr>=1&&Cr<2){col='var(--yellow)';txt='Acceptable (1–2 mg/L) — monitor';}
+  else if(Cr>=2){col='var(--magenta)';txt='Still elevated — hold longer';}
+  else{col='var(--cyan)';txt='Below detection limit (0.25 µg/mL) — redose promptly';}
+  document.getElementById('ht-remain').style.color=col;
+  document.getElementById('ht-status').textContent=txt;
+  document.getElementById('ht-status').style.color=col;
+  res.style.display='block';
+}
+function calcSSP(){
+  const Cp=fieldVal('sp-cpeak',null);
+  const tstar=fieldVal('sp-tstar',0);
+  const ke=fieldVal('sp-ke',0);
+  const mic=fieldVal('sp-mic',0);
+  const box=document.getElementById('sp-res-box');
+  box.classList.remove('show');
+  if(!Cp||Cp<=0) return;
+  const Cmax=ke>0&&tstar>0?Cp*Math.exp(ke*tstar):Cp;
+  document.getElementById('sp-cmax').textContent=Cmax.toFixed(2)+' mg/L';
+  let cmicTxt='—',stTxt,stCol;
+  if(mic>0){
+    const r=Cmax/mic;
+    cmicTxt=r.toFixed(1);
+    if(r>=10){stTxt='✓ On target (≥10×MIC)';stCol='var(--green)';}
+    else if(r>=8){stTxt='▲ Borderline (8–10×MIC)';stCol='var(--yellow)';}
+    else{stTxt='▼ Sub-target (<8×MIC) — consider dose increase';stCol='var(--magenta)';}
+  } else {
+    const t=stratTargets(ptStrat);
+    if(Cmax>=t.cmaxLo&&Cmax<=t.cmaxHi){stTxt='✓ Within target range';stCol='var(--green)';}
+    else if(Cmax>t.cmaxHi){stTxt='↑ Supratherapeutic — review';stCol='var(--yellow)';}
+    else{stTxt='▼ Sub-therapeutic — consider dose increase';stCol='var(--magenta)';}
+  }
+  document.getElementById('sp-cmic').textContent=cmicTxt;
+  const stEl=document.getElementById('sp-status');stEl.textContent=stTxt;stEl.style.color=stCol;
+  box.classList.add('show');
+}
+
+/* ════════ HARTFORD NOMOGRAM ════════ */
+// Boundary data: Nicolau et al. (Pharmacotherapy 2002) for 7 mg/kg gentamicin
+const HF_UPPER={6:9.9,7:8.5,8:7.4,9:6.4,10:5.5,11:4.8,12:4.2,13:3.6,14:3.2};
+const HF_LOWER={6:6.7,7:5.8,8:5.0,9:4.3,10:3.7,11:3.2,12:2.8,13:2.4,14:2.1};
+// Top limit of q48h zone: above this = "Hold Dose / Off Chart" (severe accumulation)
+// Derived from clinical extension of the Hartford nomogram beyond published Q48h zone
+const HF_HOLD={6:14.0,7:12.0,8:10.2,9:8.8,10:7.6,11:6.6,12:5.7,13:5.0,14:4.4};
+function hfInterp(tbl,t){
+  const keys=Object.keys(tbl).map(Number).sort((a,b)=>a-b);
+  if(t<=keys[0])return tbl[keys[0]];
+  if(t>=keys[keys.length-1])return tbl[keys[keys.length-1]];
+  for(let i=0;i<keys.length-1;i++){
+    if(t>=keys[i]&&t<=keys[i+1]){
+      const f=(t-keys[i])/(keys[i+1]-keys[i]);
+      return tbl[keys[i]]+(tbl[keys[i+1]]-tbl[keys[i]])*f;
+    }
+  }
+  return null;
+}
+function calcHartford(){
+  const drug=document.getElementById('hf-drug').value;
+  const t=fieldVal('hf-time',null);
+  const raw=fieldVal('hf-level',null);
+  const res=document.getElementById('hf-res');
+  const adj=document.getElementById('hf-adj-note');
+  if(!t||!raw||t<6||t>14||raw<=0){res.style.display='none';adj.style.display='none';return;}
+  let plotC=raw;
+  if(drug==='gent3'){
+    adj.style.display='block';
+    adj.innerHTML='⚠ Gentamicin 3 mg/kg (synergy): Hartford nomogram validated for 7 mg/kg only. Use trough monitoring (&lt;1 mg/L) instead.';
+    document.getElementById('hf-res').style.display='none';return;
+  } else adj.style.display='none';
+  const upper=hfInterp(HF_UPPER,t);
+  const lower=hfInterp(HF_LOWER,t);
+  document.getElementById('hf-plot-t').textContent=t;
+  document.getElementById('hf-plot-c').textContent=plotC.toFixed(1);
+  let interval,col,note;
+  const hold=hfInterp(HF_HOLD,t);
+  if(plotC>=hold){
+    interval='⚠ Hold Dose';col='var(--magenta)';
+    note='Level off chart — severe accumulation. Withhold next dose and recheck serial levels.';
+  } else if(plotC>=upper){
+    interval='q48h';col='var(--orange)';note='Significantly reduced clearance — q48h dosing';
+  } else if(plotC>=lower){
+    interval='q36h';col='var(--yellow)';note='Reduced clearance — q36h dosing';
+  } else {
+    interval='q24h';col='var(--green)';note='Normal clearance — q24h dosing appropriate';
+  }
+  document.getElementById('hf-interval').textContent=interval;
+  document.getElementById('hf-interval').style.color=col;
+  document.getElementById('hf-interval-note').textContent=note;
+  document.getElementById('hf-interval-note').style.color=col;
+  const recBox=document.getElementById('hf-rec-box');
+  recBox.style.background=
+    col==='var(--green)'   ? 'rgba(0,255,179,.05)' :
+    col==='var(--yellow)'  ? 'rgba(255,214,0,.05)' :
+    col==='var(--orange)'  ? 'rgba(255,124,0,.05)' :
+    col==='var(--magenta)' ? 'rgba(255,0,136,.05)' :  // Hold Dose
+    'rgba(255,0,136,.05)';
+  recBox.style.borderRadius='10px';
+  res.style.display='block';
+  drawHartfordNomogram(t,plotC);
+}
+function drawHartfordNomogram(tPlot,cPlot){
+  const canvas=document.getElementById('hf-canvas');
+  const parent=canvas.parentElement;
+  const dpr=window.devicePixelRatio||1;
+  const W=parent.clientWidth-24;
+  const H=Math.round(W*0.52);
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+  const pad={t:16,r:20,b:46,l:54};
+  const gW=W-pad.l-pad.r,gH=H-pad.t-pad.b;
+  const tMin=6,tMax=14,cMax=16;
+  const tx=t=>pad.l+(t-tMin)/(tMax-tMin)*gW;
+  const ty=c=>pad.t+gH-(c/cMax)*gH;
+  const times=[6,7,8,9,10,11,12,13,14];
+  // Draw zones
+  ctx.beginPath();times.forEach((t,i)=>{i===0?ctx.moveTo(tx(t),ty(HF_LOWER[t])):ctx.lineTo(tx(t),ty(HF_LOWER[t]));});
+  ctx.lineTo(tx(14),ty(0));ctx.lineTo(tx(6),ty(0));ctx.closePath();
+  ctx.fillStyle='rgba(0,255,179,.1)';ctx.fill();
+  ctx.beginPath();times.forEach((t,i)=>{i===0?ctx.moveTo(tx(t),ty(HF_UPPER[t])):ctx.lineTo(tx(t),ty(HF_UPPER[t]));});
+  [...times].reverse().forEach(t=>ctx.lineTo(tx(t),ty(HF_LOWER[t])));ctx.closePath();
+  ctx.fillStyle='rgba(255,214,0,.1)';ctx.fill();
+  // q48h zone: between HF_UPPER and HF_HOLD
+  ctx.beginPath();
+  times.forEach((t,i)=>{i===0?ctx.moveTo(tx(t),ty(HF_HOLD[t])):ctx.lineTo(tx(t),ty(HF_HOLD[t]));});
+  [...times].reverse().forEach(t=>ctx.lineTo(tx(t),ty(HF_UPPER[t])));ctx.closePath();
+  ctx.fillStyle='rgba(255,124,0,.12)';ctx.fill();
+  // Off-chart zone: above HF_HOLD — severe accumulation
+  ctx.beginPath();
+  times.forEach((t,i)=>{i===0?ctx.moveTo(tx(t),ty(cMax)):ctx.lineTo(tx(t),ty(cMax));});
+  [...times].reverse().forEach(t=>ctx.lineTo(tx(t),ty(HF_HOLD[t])));ctx.closePath();
+  ctx.fillStyle='rgba(255,0,136,.12)';ctx.fill();
+  // Grid
+  for(let c=0;c<=16;c+=4){
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,ty(c));ctx.lineTo(pad.l+gW,ty(c));ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='right';
+    ctx.fillText(c,pad.l-5,ty(c)+4);
+  }
+  for(let t=6;t<=14;t+=2){
+    ctx.strokeStyle=gGridColor();ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(tx(t),pad.t);ctx.lineTo(tx(t),pad.t+gH);ctx.stroke();
+    ctx.fillStyle=gAxisColor();ctx.font='10px Space Mono';ctx.textAlign='center';
+    ctx.fillText(t+'h',tx(t),pad.t+gH+18);
+  }
+  ctx.fillStyle=gAxisLabelColor();ctx.font='10px DM Sans';ctx.textAlign='center';
+  ctx.fillText('Time after start of infusion (hr)',pad.l+gW/2,H-4);
+  ctx.save();ctx.translate(13,pad.t+gH/2);ctx.rotate(-Math.PI/2);ctx.fillText('Level (mg/L)',0,0);ctx.restore();
+  // Boundary lines
+  ctx.beginPath();times.forEach((t,i)=>{i===0?ctx.moveTo(tx(t),ty(HF_HOLD[t])):ctx.lineTo(tx(t),ty(HF_HOLD[t]));});
+  ctx.strokeStyle='rgba(255,0,136,.8)';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();times.forEach((t,i)=>{i===0?ctx.moveTo(tx(t),ty(HF_UPPER[t])):ctx.lineTo(tx(t),ty(HF_UPPER[t]));});
+  ctx.strokeStyle='rgba(255,124,0,.8)';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();times.forEach((t,i)=>{i===0?ctx.moveTo(tx(t),ty(HF_LOWER[t])):ctx.lineTo(tx(t),ty(HF_LOWER[t]));});
+  ctx.strokeStyle='rgba(255,214,0,.8)';ctx.lineWidth=2;ctx.stroke();
+  // Zone labels
+  ctx.font='bold 10px Space Mono';
+  ctx.fillStyle='rgba(255,0,136,.8)';ctx.textAlign='right';ctx.fillText('⚠ Hold',tx(14)-4,ty(cMax-0.5));
+  ctx.fillStyle='rgba(255,124,0,.8)';ctx.textAlign='right';ctx.fillText('q48h',tx(14)-4,ty((HF_UPPER[14]+HF_HOLD[14])/2));
+  ctx.fillStyle='rgba(255,214,0,.8)';ctx.textAlign='right';ctx.fillText('q36h',tx(14)-4,ty((HF_LOWER[14]+HF_UPPER[14])/2));
+  ctx.fillStyle='rgba(0,255,179,.8)';ctx.textAlign='right';ctx.fillText('q24h',tx(14)-4,ty(1.5));
+  // Patient point
+  const px=tx(tPlot),py=ty(cPlot);
+  const holdLim=hfInterp(HF_HOLD,tPlot);
+  const zone=cPlot>=holdLim?'hold':cPlot>=hfInterp(HF_UPPER,tPlot)?'q48':cPlot>=hfInterp(HF_LOWER,tPlot)?'q36':'q24';
+  const ptCol=zone==='hold'?'#ff0088':zone==='q24'?'#00ffb3':zone==='q36'?'#ffd600':'#ff7c00';
+  ctx.beginPath();ctx.arc(px,py,10,0,Math.PI*2);ctx.strokeStyle=ptCol+'88';ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.fillStyle=ptCol;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle=ptCol;ctx.font='bold 10px Space Mono';
+  ctx.textAlign=px>pad.l+gW*0.7?'right':'left';
+  const lx=px>pad.l+gW*0.7?px-12:px+12;
+  ctx.fillText(cPlot.toFixed(1)+' mg/L',lx,py-6);
+  ctx.fillText('t='+tPlot+'h',lx,py+8);
+  // Axes
+  ctx.strokeStyle=isDark()?'rgba(104,104,160,.45)':'rgba(80,110,150,.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
+}
+
+/* ════════ INITIAL DOSE: CrCl ════════ */
+let IDPK={};
+function onIDSex(s){
+  document.getElementById('id-sex-m').classList.toggle('active',s==='M');
+  document.getElementById('id-sex-f').classList.toggle('active',s==='F');
+  IDPK.sex=s;calcIDCrCl();
+}
+function calcIDCrCl(){
+  const age=fieldVal('id-age',null),abw=fieldVal('id-abw',null),ht=fieldVal('id-ht',null);
+  const scr=fieldVal('id-scr',null),cysc=fieldVal('id-cysc',0);
+  const sex=IDPK.sex||'M';
+  if(!age||!abw||!scr||age<=0||abw<=0||scr<=0)return;
+  IDPK={...IDPK,age,abw,ht,scr,cysc,sex};
+  const isFemale=sex==='F';
+  let ibw=null,dwt=abw;
+  if(ht>0){
+    const htIn=ht/2.54;
+    ibw=isFemale?45.5+2.3*(htIn-60):50+2.3*(htIn-60);
+    if(ibw<0)ibw=abw;
+    if(abw>ibw*1.2){dwt=ibw+0.4*(abw-ibw);IDPK.isObese=true;}
+    else{dwt=abw<ibw?abw:abw;IDPK.isObese=false;}
+    document.getElementById('id-bw-chip').style.display='block';
+    document.getElementById('id-ibw-val').textContent=ibw.toFixed(1);
+    document.getElementById('id-dwt-val').textContent=dwt.toFixed(1);
+    if(IDPK.isObese){
+      document.getElementById('id-adjbw-chip').style.display='block';
+      document.getElementById('id-adjbw-val').textContent=dwt.toFixed(1);
+      document.getElementById('id-obese-note').style.display='block';
+    } else {document.getElementById('id-adjbw-chip').style.display='none';document.getElementById('id-obese-note').style.display='none';}
+  }
+  IDPK.ibw=ibw;IDPK.dwt=dwt;
+  const cgWt=dwt; // AdjBW for obese per aminoglycoside CG guidance
+  const cgCrCl=Math.max(0,((140-age)*cgWt*(isFemale?0.85:1))/(72*scr));
+  IDPK.cgCrCl=cgCrCl;IDPK.usedCrCl=cgCrCl;
+  let ckdepiGFR=null;
+  if(cysc>0){
+    const k=isFemale?0.7:0.9,al=isFemale?-0.219:-0.144;
+    const cr=scr/k,cy=cysc/0.8;
+    ckdepiGFR=135*Math.pow(Math.min(cr,1),al)*Math.pow(Math.max(cr,1),-0.544)*Math.pow(Math.min(cy,1),-0.323)*Math.pow(Math.max(cy,1),-0.778)*Math.pow(0.9961,age)*(isFemale?0.963:1);
+  }
+  IDPK.ckdepiGFR=ckdepiGFR;
+  document.getElementById('id-cg-val').textContent=cgCrCl.toFixed(1);
+  document.getElementById('id-ckd-row').style.display=ckdepiGFR?'flex':'none';
+  if(ckdepiGFR)document.getElementById('id-ckd-val').textContent=ckdepiGFR.toFixed(1);
+  const pr=document.getElementById('id-crcl-pick-row');
+  const ur=document.getElementById('id-crcl-used-row');
+  if(ckdepiGFR){
+    document.getElementById('id-pick-cg-val').textContent='('+cgCrCl.toFixed(1)+')';
+    document.getElementById('id-pick-ckd-val').textContent='('+ckdepiGFR.toFixed(1)+')';
+    pr.style.display='block';ur.style.display='flex';
+    const src=document.querySelector('input[name="id-crcl-src"]:checked')?.value||'cg';
+    IDPK.usedCrCl=src==='ckd'?ckdepiGFR:cgCrCl;
+    document.getElementById('id-crcl-used-val').textContent=IDPK.usedCrCl.toFixed(1)+' mL/min';
+  } else {pr.style.display='none';ur.style.display='none';}
+  document.getElementById('id-crcl-box').classList.add('show');
+  document.getElementById('id-pk-card').style.display='block';
+  if(IDPK.model)calcIDPK();
+}
+function onIDCrClPick(src){
+  document.getElementById('id-pick-cg').classList.toggle('active',src==='cg');
+  document.getElementById('id-pick-ckd').classList.toggle('active',src==='ckd');
+  document.querySelector('input[name="id-crcl-src"][value="'+src+'"]').checked=true;
+  IDPK.usedCrCl=src==='ckd'?(IDPK.ckdepiGFR||IDPK.cgCrCl):IDPK.cgCrCl;
+  document.getElementById('id-crcl-used-val').textContent=IDPK.usedCrCl.toFixed(1)+' mL/min';
+  if(IDPK.model)calcIDPK();
+}
+function selectIDModel(m){
+  IDPK.model=m;
+  document.querySelectorAll('.pk-model-card').forEach(c=>c.classList.toggle('selected',c.dataset.mdl===m));
+  calcIDPK();
+}
+let idStrat='mdd';
+function calcIDPK(){
+  if(!IDPK.model||!IDPK.usedCrCl||!IDPK.dwt)return;
+  const CrCl=IDPK.usedCrCl,dwt=IDPK.dwt;
+  const vdMap={std:0.25,edema:0.30,lean:0.15};
+  const ke=0.0024*CrCl+0.01;
+  const Vd=(vdMap[IDPK.model]||0.25)*dwt;
+  const t12=Math.LN2/ke;
+  IDPK.ke=ke;IDPK.Vd=Vd;IDPK.t12=t12;
+  document.getElementById('id-ke-chip').textContent=ke.toFixed(5);
+  document.getElementById('id-vd-chip').textContent=Vd.toFixed(2);
+  document.getElementById('id-t12-chip').textContent=t12.toFixed(2);
+  document.getElementById('id-pk-chips').style.display='block';
+  document.getElementById('id-strat-card').style.display='block';
+  generateIDDoseRec();
+}
+function onIDStrat(s){
+  idStrat=s;
+  document.getElementById('id-strat-mdd').classList.toggle('active',s==='mdd');
+  document.getElementById('id-strat-eid').classList.toggle('active',s==='eid');
+  document.getElementById('id-mdd-content').style.display=s==='mdd'?'block':'none';
+  document.getElementById('id-eid-content').style.display=s==='eid'?'block':'none';
+  generateIDDoseRec();
+}
+
+// Hospital targets by indication
+const IND_TARGETS={
+  gn_lt:     {label:'GN — Life-threatening',            peakLo:8,  peakHi:10, troughMax:2, note:'Peak 8–10 mg/L · Trough &lt;1–2 mg/L'},
+  gn_serious:{label:'GN — Serious',                    peakLo:6,  peakHi:8,  troughMax:2, note:'Peak 6–8 mg/L · Trough &lt;1–2 mg/L'},
+  gn_uti:    {label:'GN — UTI',                         peakLo:4,  peakHi:6,  troughMax:2, note:'Peak 4–6 mg/L · Trough &lt;2 mg/L'},
+  endo_tdd:  {label:'Endocarditis — Synergy TDD',       peakLo:3,  peakHi:4,  troughMax:1, note:'Peak 3–4 mg/L · Trough &lt;1 mg/L · 3 divided doses/day'},
+  endo_oid_strep:{label:'Endocarditis OID — Streptococci (alt)',   peakLo:10, peakHi:12, troughMax:1,
+                 note:'Peak 10–12 mg/L (Cₘₐₓ 1h post-injection) · 3 mg/kg q24h · CrCl &gt;60 only · Streptococci, S.gallolyticus, S.viridans',
+                 fixedIntervals:[24], fixedMgkg:3, minCrCl:60},
+  endo_oid_staph:{label:'Endocarditis OID — Staph/Enterococcus (alt)', peakLo:10, peakHi:12, troughMax:1,
+                 note:'Peak 10–12 mg/L (Cₘₐₓ 1h post-injection) · 1.5 mg/kg q12h · CrCl &gt;60 only · Staphylococci, Enterococcus spp.',
+                 fixedIntervals:[12], fixedMgkg:1.5, minCrCl:60},
+  eid_mod:   {label:'EID — Non-critically ill',          peakLo:8,  peakHi:12, troughMax:1,
+              note:'Peak 8–12 mg/L · Trough &lt;1 mg/L · PD target: AUC/MIC 30–50'},
+  eid_crit:  {label:'EID — Critically ill',             peakLo:8,  peakHi:12, troughMax:1,
+              note:'Peak/MIC ≥8–10 · AUC/MIC 80–100 · Trough &lt;1 mg/L · Use nomogram-based approach'}
+};
+const IND_CHILD={
+  gn_lt:{mgkgLo:1.7,mgkgHi:2.0}, gn_serious:{mgkgLo:1.5,mgkgHi:2.0}, gn_uti:{mgkgLo:1.5,mgkgHi:2.0},
+  endo_tdd:{mgkgLo:1.0,mgkgHi:1.0},
+  endo_oid_strep:{mgkgLo:3,mgkgHi:3}, endo_oid_staph:{mgkgLo:1.5,mgkgHi:1.5},
+  eid_mod:{mgkgLo:7,mgkgHi:7}, eid_crit:{mgkgLo:7,mgkgHi:7}
+};
+const IND_ADULT={
+  gn_lt:{mgkgLo:1.7,mgkgHi:2.0}, gn_serious:{mgkgLo:1.5,mgkgHi:2.0}, gn_uti:{mgkgLo:1.5,mgkgHi:2.0},
+  endo_tdd:{mgkgLo:1.0,mgkgHi:1.0},
+  endo_oid_strep:{mgkgLo:3,mgkgHi:3}, endo_oid_staph:{mgkgLo:1.5,mgkgHi:1.5},
+  eid_mod:{mgkgLo:7,mgkgHi:7}, eid_crit:{mgkgLo:7,mgkgHi:7}
+};
+
+function generateIDDoseRec(){
+  const{ke,Vd,dwt,t12,usedCrCl:CrCl}=IDPK;
+  if(!ke||!Vd||!dwt)return;
+  const tp=0.5;
+  let eidIntervals,eidNote='',mddIntervals,mddNote='';
+  if(CrCl>=60)eidIntervals=[24];
+  else if(CrCl>=40)eidIntervals=[36];
+  else if(CrCl>=30)eidIntervals=[48];
+  else{eidIntervals=[];eidNote='Hartford EID not recommended for CrCl &lt;30 mL/min — use Conventional.';}
+  if(CrCl>60)mddIntervals=[8,12];
+  else if(CrCl>=40)mddIntervals=[12];
+  else if(CrCl>=20)mddIntervals=[24];
+  else{mddIntervals=[24,48];mddNote='CrCl &lt;20: give load then dose by level.';}
+  document.getElementById('id-dose-card').style.display='block';
+  document.getElementById('id-mdd-content').style.display=idStrat==='mdd'?'block':'none';
+  document.getElementById('id-eid-content').style.display=idStrat==='eid'?'block':'none';
+  const mddNoteEl=document.getElementById('id-mdd-note');
+  const eidNoteEl=document.getElementById('id-eid-note');
+  if(mddNoteEl){mddNoteEl.innerHTML=mddNote;mddNoteEl.style.display=mddNote?'block':'none';}
+  if(eidNoteEl){eidNoteEl.innerHTML=eidNote;eidNoteEl.style.display=eidNote?'block':'none';}
+  // MDD indication
+  const isChild=(document.getElementById('mdd-age-grp')?.value||'adult')==='child';
+  const indKey=document.getElementById('mdd-indication')?.value||'gn_serious';
+  const ind=IND_TARGETS[indKey]||IND_TARGETS.gn_serious;
+  const doseRange=isChild?(IND_CHILD[indKey]||{mgkgLo:1.5,mgkgHi:2.0}):(IND_ADULT[indKey]||{mgkgLo:1.5,mgkgHi:2.0});
+  const tgtNote=document.getElementById('mdd-target-note');
+  // Resolve intervals: fixed (endo OID) vs CrCl-based, with minCrCl guard
+  let resolvedIntervals=mddIntervals, resolvedNote=mddNote;
+  if(ind.fixedIntervals){
+    if(ind.minCrCl&&CrCl<ind.minCrCl){
+      resolvedIntervals=[];
+      resolvedNote='CrCl '+CrCl.toFixed(0)+' &lt; '+ind.minCrCl+' mL/min — this regimen requires CrCl &gt;'+ind.minCrCl+'. Use Synergy TDD instead.';
+    } else {
+      resolvedIntervals=ind.fixedIntervals;
+      resolvedNote='';
+    }
+  }
+  // EID indications (eid_mod, eid_crit) follow Hartford intervals
+  const isEIDInd=(indKey==='eid_mod'||indKey==='eid_crit');
+  if(isEIDInd){resolvedIntervals=eidIntervals;resolvedNote=eidNote;}
+  // eid_crit: use eid_crit targets but Hartford dose (7 mg/kg)
+  const eidTargets=indKey==='eid_crit'?IND_TARGETS.eid_crit:IND_TARGETS.eid_mod;
+  if(mddNoteEl){mddNoteEl.innerHTML=resolvedNote;mddNoteEl.style.display=resolvedNote?'block':'none';}
+  const fixedMgkg=ind.fixedMgkg||null;
+  const loMg=fixedMgkg||doseRange.mgkgLo;
+  const hiMg=fixedMgkg||doseRange.mgkgHi;
+  if(tgtNote){tgtNote.innerHTML='🎯 <strong>'+ind.label+'</strong>: '+ind.note;tgtNote.style.display='block';}
+  buildDoseTable('mdd',dwt,ke,Vd,tp,isEIDInd?resolvedIntervals:resolvedIntervals,loMg,hiMg,
+    isEIDInd?eidTargets:ind,'id-mdd-pills','id-mdd-table');
+  buildDoseTable('eid',dwt,ke,Vd,tp,eidIntervals,7,7,IND_TARGETS.eid_mod,'id-eid-pills','id-eid-table');
+}
+function buildDoseTable(strat,dwt,ke,Vd,tp,intervals,mgkgLo,mgkgHi,ind,pillsId,tableId){
+  const sugDose=roundTo10(mgkgLo*dwt);
+  const pillsEl=document.getElementById(pillsId);
+  pillsEl.innerHTML='';
+  const doses=[roundTo10(mgkgLo*dwt)];
+  if(mgkgHi>mgkgLo) doses.push(roundTo10(mgkgHi*dwt));
+  doses.filter((v,i,a)=>a.indexOf(v)===i).forEach(dose=>{
+    const p=document.createElement('div');
+    p.className='dose-pill'+(dose===sugDose?' suggested':'');
+    p.textContent=dose+' mg'+(dose===sugDose?' ⭐':'');
+    pillsEl.appendChild(p);
+  });
+  const tableEl=document.getElementById(tableId);
+  tableEl.innerHTML='';
+  if(!intervals||!intervals.length)return;
+  intervals.forEach(tau=>{
+    doses.forEach(dose=>{
+      const Cmax=cmaxSS(dose,ke,Vd,tp,tau);
+      const Ctrough=cminSS(Cmax,ke,tp,tau);
+      const mgkg=(dose/dwt).toFixed(1);
+      const peakOk=Cmax>=ind.peakLo&&Cmax<=ind.peakHi;
+      const troughOk=Ctrough<=ind.troughMax;
+      const troughPref=Ctrough>=2&&Ctrough<=5;
+      const isOk=peakOk&&troughOk;
+      const isPref=peakOk&&troughPref;
+      const sc=isPref?'status-ok':isOk?'status-hi':'status-lo';
+      const st=isPref?'✓ Preferred':isOk?'~ Acceptable':'⚠ Review';
+      const tCol=troughPref?'var(--green)':troughOk?'var(--yellow)':'var(--magenta)';
+      const row=document.createElement('div');
+      row.className='md-row'+(isPref?' md-sel':'');
+      row.innerHTML='<span>q'+tau+'h</span><span>'+dose+' mg</span><span>'+mgkg+'</span><span>'+Cmax.toFixed(1)+'</span><span style="color:'+tCol+'">'+Ctrough.toFixed(2)+'</span><span class="'+sc+'">'+st+'</span>';
+      row.addEventListener('click',()=>{
+        document.querySelectorAll('#'+tableId+' .md-row').forEach(r=>r.classList.remove('md-sel'));
+        row.classList.add('md-sel');
+        prefillDesign(dose,tp,tau,ke,Vd);
+      });
+      tableEl.appendChild(row);
+    });
+  });
+}
+function prefillDesign(dose,tp,tau,ke,Vd){
+  document.getElementById('id-des-dose').value=dose;
+  document.getElementById('id-des-tp').value=tp;
+  document.getElementById('id-des-tau').value=tau;
+  document.getElementById('id-des-ke').value=ke.toFixed(5);
+  document.getElementById('id-des-vd').value=Vd.toFixed(2);
+  document.getElementById('id-design-card').style.display='block';
+  calcIDDesign();
+  setTimeout(()=>document.getElementById('id-design-card').scrollIntoView({behavior:'smooth',block:'center'}),150);
+}
+function calcIDDesign(){
+  const D=fieldVal('id-des-dose',null),tp=fieldVal('id-des-tp',0.5);
+  const tau=fieldVal('id-des-tau',null),ke=fieldVal('id-des-ke',IDPK.ke);
+  const Vd=fieldVal('id-des-vd',IDPK.Vd),mic=fieldVal('id-des-mic',0);
+  const res=document.getElementById('id-des-results');
+  if(!D||!tp||!tau||!ke||!Vd||D<=0||tp<=0||tau<=tp){res.style.display='none';document.getElementById('id-des-graph-wrap').style.display='none';return;}
+  const Cmax=cmaxSS(D,ke,Vd,tp,tau);
+  const Ctrough=cminSS(Cmax,ke,tp,tau);
+  const t12=Math.LN2/ke;
+  const cmic=mic>0?Cmax/mic:null;
+  const cmSt=cmaxStatus(Cmax,idStrat);
+  const ctSt=ctroughStatus(Ctrough,idStrat);
+  document.getElementById('id-des-cmax').textContent=Cmax.toFixed(2)+' mg/L';
+  document.getElementById('id-des-ctrough').textContent=Ctrough.toFixed(2)+' mg/L';
+  document.getElementById('id-des-t12').textContent=t12.toFixed(2)+' hr';
+  document.getElementById('id-des-cmic').textContent=cmic?cmic.toFixed(1):'—';
+  document.getElementById('id-des-cmax-status').textContent=cmSt.txt;document.getElementById('id-des-cmax-status').className='rr-status '+cmSt.cls;
+  document.getElementById('id-des-ctrough-status').textContent=ctSt.txt;document.getElementById('id-des-ctrough-status').className='rr-status '+ctSt.cls;
+  res.style.display='grid';
+  const t=stratTargets(idStrat);
+  drawMultiDoseGraph('id-des-canvas','id-des-graph-wrap',ke,D,Vd,tp,tau,'',[t.cmaxLo,t.cmaxHi],[0,t.ctroughHi]);
+}
+
+/* ════════ INIT ════════ */
+window.addEventListener('load',()=>{
+  // Init SS mode description
+  document.getElementById('ssm-desc').innerHTML=SS_DESC.trough;
+  // Register lightbox taps
+  ['pts-graph-wrap','pt-graph-wrap','ss-graph-wrap','id-des-graph-wrap'].forEach(id=>{
+    initGraphTap(id,id.replace('-graph-wrap','').toUpperCase()+' — C–T PROFILE');
+  });
+  // Init MIC section
+  document.getElementById('mdd-mic-section').style.display='block';
+  document.getElementById('no-mic-msg').style.display='block';
+  document.getElementById('mic-target-row').style.display='none';
+});
+</script>
+</body>
+</html>
