@@ -1117,7 +1117,9 @@ DRUGS.forEach(d => {
   el.onclick = () => {
     dg.querySelectorAll('.drug-card').forEach(c=>c.classList.remove('selected'));
     el.classList.add('selected');
-    if(d.id==='vanco') setTimeout(()=>nav('vanco'),180);
+    if(d.id==='vanco')  setTimeout(()=>nav('vanco'),180);
+    else if(d.id==='amika') setTimeout(()=>window.location.href='Amikacin.html',180);
+    else if(d.id==='genta') setTimeout(()=>window.location.href='Gentamicin.html',180);
     else if(d.id==='pheny'||d.id==='valpr') setTimeout(()=>window.open(EXT_URL,'_blank'),180);
     else setTimeout(()=>nav('dev'),180);
   };
